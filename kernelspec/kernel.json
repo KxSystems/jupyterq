@@ -1,0 +1,11 @@
+{
+ "argv": [
+  "q",
+  "jupyterq_kernel.q",
+  "-cds",
+  "{connection_file}"
+ ],
+ "display_name": "Q 3.5",
+ "language": "q",
+ "env": {"JUPYTERQ_SERVERARGS":""}
+}

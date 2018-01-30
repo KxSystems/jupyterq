@@ -1,0 +1,34 @@
+IDIR=src/include
+SDIR=src/c
+CFLAGS+=-fPIC -DKXVER=3 -g -O2 
+INCLUDES=
+
+ifeq ($(shell uname),Linux)
+LDFLAGS=-shared 
+else ifeq ($(shell uname),Darwin)
+LDFLAGS=-bundle -undefined dynamic_lookup -L/usr/local/lib -Xlinker -rpath -Xlinker /usr/local/lib
+INCLUDES+=-I/usr/local/include
+endif
+ifeq (x$QHOME,x)
+$(error QHOME not defined)
+endif
+ifeq (x$QLIBDIR,x)
+$(error QLIBDIR not defined)
+endif
+jupyterq: jupyterq.so
+	
+jupyterq.so: $(SDIR)/jupyterq.c $(IDIR)/k.h
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -I$(IDIR)
+$(IDIR)/k.h:
+	curl -k https://raw.githubusercontent.com/KxSystems/kdb/master/c/c/k.h -o $(IDIR)/k.h
+
+clean:
+	rm -f *.o
+cleanlibs: clean
+	rm -f *.so
+install: jupyterq
+	jupyter kernelspec install --user --name=qpk kernelspec
+	cp jupyterq_b64.q jupyterq_htmlgen.q jupyterq_kernel.q jupyterq_server.q jupyterq_help.q jupyterq_pyzmq.q $(QHOME)
+	cp -r kxpy $(QHOME)
+	cp jupyterq.so $(QLIBDIR)
+
