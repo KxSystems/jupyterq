@@ -15,7 +15,7 @@ zsocks:(0#0)!()                                                                 
 addzsock:{zsocks[k:1+max -1,key zsocks]:x;k}                                                    / keep track of zmq sockets
 zsock.destroy:{zsocks[x][`:close][]}                                                            / close a socket
 zsock.fd:$[17<="I"${(x?".")#x}pyzmq[`:pyzmq_version][]`;                                        / file descriptor for zeromq socke, need v>=17 for fileno
- {"i"$zsocks[x][`fileno][]`};
+ {"i"$zsocks[x][`:fileno][]`};
  {"i"$zsocks[x][`:FD]`}]
 zmsgs:(0#0)!()                                                                                  / pending messages sent or received
 zmsg.new:{zmsgs[k:1+max -1,key zmsgs]:();k}                                                     / create a new message to be sent
