@@ -147,6 +147,7 @@ ch.sh.complete_request:srvexec`complete
 ch.sh.inspect_request:srvexec`inspect
 
 ch.sh.shutdown_request:{[z;s;mc]if[last allowstop;snd[z;s]kr[`shutdown_reply;mc]md[`restart]mc .`content`restart;exit 0]}
+ch.sh.input_reply:{[z;s;mc]srvsi mc .`content`value;}  / pass back front end reply to waiting server
 
 / comms, all comms are owned and managed by execution server, just pass through to the server
 / frontend->server
@@ -193,6 +194,9 @@ srvdis:{[z;s;mc;res]
   kr[`display_data;mc]`metadata`data`transient!(res 1;res 0;dd)];
  }
 srvclear:{[z;s;mc;res]snd[z;io]kr[`clear_output;mc]md[`wait]res}
+srvinput:{[z;s;mc;prompt;pass]
+ if[not mc . `content`allow_stdin;neg[.z.w](1;"Input requests not supported by this frontend");:()];
+ snd[z;si]kr[`input_request;mc]`prompt`password!(prompt;pass);}
 
 srvcmp.execute:{[z;s;mc;res]   / server has completed execute_request
  sndstd mc;                    / pending stdout/err msgs sent first

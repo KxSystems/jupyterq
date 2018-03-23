@@ -5,6 +5,8 @@ lf:{.Q.trp[system;"l ",string y;{krnh(`.qpk.srvstarterr;y;.Q.sbt z);krnh[];if[no
 F:Z:S:MC:(::)                                          / latest exec request from kernel,zmqid,socket and message
 setstate:{[f;z;s;mc]F::f;Z::z;S::s;MC::mc}             / set latest message state 
 krnh:neg hopen"J"$.z.x 0;                              / handle to kernel
+krnsi:neg hopen"J"$.z.x 0;                             / handle to kernel for stdin requests
+krnsi({.qpk.srvsi:neg .z.w;};`)                        / register stdin handle on server
 krnh(`.qpk.srvreg;`);                                  / register
 krn:{krnh x;krnh[];}                                   / send and async flush
 lf[0b]`p.q
@@ -28,6 +30,20 @@ p)class> stdwriter(io.TextIOBase):
  def write(self, stuff):
   self.qfunc(stuff)
 {.p.import[`sys][:;x;stdwriter y]}'[`:stdout`:stderr;{1 x},{2 x}];
+p)class> stdreader(io.TextIOBase):
+ def __init__(self,qfunc=None):
+  import getpass
+  self.qfunc=qfunc
+  __builtins__.input=self.input
+  getpass.getpass=self.getpass
+ def input(self,prompt=None):
+  return self.qfunc(prompt if prompt else "",False)
+ def getpass(self,prompt=None):
+  return self.qfunc(prompt if prompt else "",True)
+ 
+readstdin:{krnsi(`.qpk.srvinput;Z;S;MC;x;y);$[1~first r:neg[krnsi][];'r 1;r]}
+{.p.import[`sys][:;x;stdreader y]}'[`:stdin;readstdin];
+
 
 / response formatting
 md:{(1#x)!1#y}                                         / make one item dict
@@ -128,9 +144,12 @@ magic.savescript:{[z;s;c;mc;p]
  krncmp[`savescript;z;s;MC;(0;mc;exn)];
  :(1;mc);
  }
+/ treat code cell as containing python code, prepend p) to everything not indented
+magic.python:{[z;s;c;mc;p]mc[`content;`code]:` sv l[;"p)",]c _ p;(0;mc)}
  
 magics:enlist["/%loadscript*"]!enlist magic.loadscript
 magics[enlist"/%savescript*"]:enlist magic.savescript
+magics[enlist"/%python*"]:enlist magic.python
 pmagic:{[z;s;mc]
  c:` vs mc .`content`code;
  if[not any any c like/:key magics;:(0;mc)]; / skip search if no magics
