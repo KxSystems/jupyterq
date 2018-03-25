@@ -1,6 +1,8 @@
 #ifndef _WIN32
 #include <unistd.h>
+#define EXP
 #else
+#define EXP __declspec(dllexport)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -13,25 +15,26 @@
 // assumes bytes in q are stored little endian
 #define EB(x) ((G)((0x0000003f&x)<<2))
 /* callback functions and methods to add and remove from q for zeromq */
-K cb(I fd){r0(k(0,".qpk.cb",ki(fd),(K)0));R (K)0;}
-K1(acb){TC(x,-KI);sd1(xi,cb);R (K)0;}
-K2(rcb0x){TC(x,-KI);TC(y,-KB);sd0x(xi,y->g);R (K)0;}
-K1(npcreate){
+EXP K cb(I fd){r0(k(0,".qpk.cb",ki(fd),(K)0));R (K)0;}
+EXP K1(acb){TC(x,-KI);sd1(xi,cb);R (K)0;}
+EXP K2(rcb0x){TC(x,-KI);TC(y,-KB);sd0x(xi,y->g);R (K)0;}
 #ifdef _WIN32
+EXP K1(npcreate){
  TC(x,-KS);
  HANDLE hPipe=CreateNamedPipe(xs,PIPE_ACCESS_INBOUND|FILE_FLAG_WRITE_THROUGH,
                                     PIPE_TYPE_BYTE|PIPE_READMODE_BYTE|PIPE_NOWAIT|PIPE_REJECT_REMOTE_CLIENTS,
-                                    1,
+                                    2,
                                     65536,
                                     65536,
                                     0,
                                     0);
  ConnectNamedPipe(hPipe,0);
  R ki((I)hPipe);
-#else
- R krr("windows only");
-#endif
 }
+EXP K2(revert){R krr("mac/linux only");}
+EXP K2(redir){R krr("mac/linux only");}
+#else
+K1(npcreate){R krr("windows only");}
 K2(revert){
  TC(x,-KI);TC(y,-KI);
  I rfd=dup2(xi,y->i);
@@ -47,12 +50,14 @@ K2(redir){
  revert(x,y);
  R r;
  }
+#endif
+
 /* b64 encoding/decoding */
 // debug
 //void printbits(unsigned int v){int i;for(i = 31; i >= 0; i--) putchar('0' + ((v >> i) & 1));}
 /* assumes bytes have been bit reversed s.t. most significant of prev is just prior to least of next 
  * alphabet and padding done elsewhere  */
-K1(b64enc){
+EXP K1(b64enc){
  TC(x,KG);
  P(xn!=3*(xn/3),krr("length")); // must get triples
  J i,j=0;
@@ -69,7 +74,7 @@ K1(b64enc){
  }
 /* q)0b sv'8 cut raze 2_'x
  * have 4 bytes, don't care about first 2 bits of each (they're zero), so get 3 bytes from this */
-K1(b64dec){
+EXP K1(b64dec){
  TC(x,KG);
  P(xn!=4*(xn/4),krr("length")); // must have multiple of 4 encoded
  J i,j=0;
@@ -92,12 +97,12 @@ Z K reverse(K rbt,K x){
  for(i=0;i<xn;i++)kG(rx)[i]=kG(rbt)[kG(x)[i]];
  R rx;}
 /* indexes the reverse bit map and alphabet casting bytes to long */
-K b64encra(K rbt,K al,K x){
+EXP K b64encra(K rbt,K al,K x){
  TC(al,KC);
  K rx=reverse(rbt,x);P(!rx,rx);
  result(b64enc,kG(al)[kG(rbt)[kG(res)[i]]],res->t=KC);
  }
-K b64decr(K rbt,K x){
+EXP K b64decr(K rbt,K x){
  K rx=reverse(rbt,x);P(!rx,rx);
  result(b64dec,kG(rbt)[kG(res)[i]],);
  }

@@ -1,6 +1,6 @@
 / jupyter kernel, no code or data lives here, communicates with a server proces but handles jupyter zeromq messaging
 \p 0W   / need for server process to connect
-\l p.q
+\l p.k
 \d .qpk
 \l jupyterq_pyzmq.q / zero mq messaing
 
@@ -58,7 +58,7 @@ cleans:{@[hclose;;{}]each stdfd}                       / clean up redirected soc
 if[.z.o like"w*";
  npcreate:`:./jupyterq 2:`npcreate,1; / TODO name?
  startsrv:{ / x is string port
-  stdfd[`stdout;stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?0Ng}each`out`err;
+  stdfd[`stdout`stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?0Ng}each`out`err;
   system"start /B cmd /C q jupyterq_server.q -q ",x," ",getenv[`JUPYTERQ_SERVERARGS]," ^>",oe[0]," 2^>",oe 1};
  .z.ts:{stdcb each stdfd;};system"t 50";]; / TODO can we select on named pipe
 if[not .z.o like"w*";
@@ -240,8 +240,7 @@ if[0~@[.p.import;`kxpy.kx_backend_inline;0];
  $[.z.o like"l*";pre[`LD_PRELOAD]`z;
    .z.o like"m*;pre[`DYLD_INSERT_LIBRARIES]`z;
    .z.o like"w*;'`nyi_win;'`nyi]];
-startsrv string system"p"
-
+startsrv string system"p";
 
 \
 see http://jupyter-client.readthedocs.io/en/latest/messaging.html for details of requests and responses required

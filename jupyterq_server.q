@@ -24,7 +24,7 @@ if[not .z.o like"w*";
  rvfd:redir'[std;1 2i];                                / redirect the output/error, keep fds to original streams in rvfd
  ];
 
-lf[0b]`p.q
+lf[0b]`p.k
 lf[0b]`jupyterq_help.q                                 / interactive help
 lf[0b]`jupyterq_b64.q                                  / for images (must be be encoded in json)
 exn:0                                                  / execution count
