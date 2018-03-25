@@ -22,7 +22,7 @@ zmsg.new:{zmsgs[k:1+max -1,key zmsgs]:();k}                                     
 zmsg.size:{$[1=count m:zmsgs x;$[.p.i.isw m;pylen m;1];count m]}                                / size of multipart message
 zmsg.destroy:{zmsgs::enlist[x]_zmsgs}                                                           / drop a message, done with it
 zmsg.addC:{zmsgs[x],:enlist pyzframe"x"$y}                                                      / add string to message, convert to bytes in case contains control characters
-zmsg.popC:{"c"$.p.py2q pypop[zmsgs x]`}                                                         / read and pop string from multipart message
+zmsg.popC:{"c"$pypop[zmsgs x]`}                                                                 / read and pop string from multipart message
 zmsg.send:{zsocks[y][`:send_multipart][zmsgs x;`flags pykw NOBLOCK]}                            / send a multipart message
 
 /trap EAGAIN error on non-blocking read in python so no error message is displayed
