@@ -1,49 +1,56 @@
-#include "k.h"
-/* for fifo out/err redirect */
-#include <string.h>
-#include <fcntl.h>
+#ifndef _WIN32
 #include <unistd.h>
-#include <errno.h>
+#else
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#pragma comment(lib,"Ws2_32.lib")
+#include <ws2tcpip.h>
+#endif
+#include "k.h"
 
 #define TC(x,T) P(x->t!=T,krr("type")) // return on unexpected type
 // assumes bytes in q are stored little endian
 #define EB(x) ((G)((0x0000003f&x)<<2))
-/* callback function and methods to add and remove from q for zeromq */
+/* callback functions and methods to add and remove from q for zeromq */
 K cb(I fd){r0(k(0,".qpk.cb",ki(fd),(K)0));R (K)0;}
 K1(acb){TC(x,-KI);sd1(xi,cb);R (K)0;}
-K1(rcb){TC(x,-KI);sd0(xi);R (K)0;}
 K2(rcb0x){TC(x,-KI);TC(y,-KB);sd0x(xi,y->g);R (K)0;}
-
-/* for stdout/err redirection */
-Z K fifobuf; //=ktn(KG,0x00010000);
-Z int fifoinit=0;
-K fifocb(I x){
- int n,no;
- K fd=ki(x);
- no=fifobuf->n;
- while((n=read(x,kG(fifobuf),fifobuf->n))){
-  P((-1==n)&&((errno==EAGAIN)||(errno==EWOULDBLOCK)),(K)0);  /* done, x is non-blocking */
-  P(-1==n,krr(strerror(errno)));                             /* something unexpected */
-  fifobuf->n=n;
-  r0(k(0,".qpk.fifocb",r1(fd),r1(fifobuf),(K)0));
-  fifobuf->n=no;
- }
- R (K)0;
- }
-Z void ififo(){if(!fifoinit)fifobuf=ktn(KG,0x00010000);}
-/* open and put callback on q select loop */
-K1(ofifo){
+K1(npcreate){
+#ifdef _WIN32
  TC(x,-KS);
- ififo();
- int fd=open(xs, O_RDWR|O_NONBLOCK);
- P(-1==fd,krr(strerror(errno)));
- sd1(fd,fifocb);
- R ki(fd);
+ HANDLE hPipe=CreateNamedPipe(xs,PIPE_ACCESS_INBOUND|FILE_FLAG_WRITE_THROUGH,
+                                    PIPE_TYPE_BYTE|PIPE_READMODE_BYTE|PIPE_NOWAIT|PIPE_REJECT_REMOTE_CLIENTS,
+                                    1,
+                                    65536,
+                                    65536,
+                                    0,
+                                    0);
+ ConnectNamedPipe(hPipe,0);
+ R ki((I)hPipe);
+#else
+ R krr("windows only");
+#endif
+}
+K2(revert){
+ TC(x,-KI);TC(y,-KI);
+ I rfd=dup2(xi,y->i);
+ if(-1==rfd)R krr("could not redirect");
+ /* done with original socket descriptor, remove from q select loop and close so it can be reused */
+ sd0x(xi,0);close(xi);R (K)0;}
+K2(redir){
+ TC(x,-KI);TC(y,-KI);
+ /* dup the original descriptor so the redirection can be reverted later */
+ I rfd=dup(y->i);
+ if(-1==rfd)R krr("could not duplicate");
+ K r=ki(rfd);
+ revert(x,y);
+ R r;
  }
+/* b64 encoding/decoding */
 // debug
 //void printbits(unsigned int v){int i;for(i = 31; i >= 0; i--) putchar('0' + ((v >> i) & 1));}
-/* base 64 enc/dec, bytes only
- * assumes bytes have been bit reversed s.t. most significant of prev is just prior to least of next 
+/* assumes bytes have been bit reversed s.t. most significant of prev is just prior to least of next 
  * alphabet and padding done elsewhere  */
 K1(b64enc){
  TC(x,KG);
@@ -60,9 +67,8 @@ K1(b64enc){
  }
  R res;
  }
-//0b sv'8 cut raze 2_'x
-// have 4 bytes, don't care about first 2 bits of each (they're zero)
-// so get 3 bytes from this
+/* q)0b sv'8 cut raze 2_'x
+ * have 4 bytes, don't care about first 2 bits of each (they're zero), so get 3 bytes from this */
 K1(b64dec){
  TC(x,KG);
  P(xn!=4*(xn/4),krr("length")); // must have multiple of 4 encoded
@@ -77,29 +83,22 @@ K1(b64dec){
  }
  R res;
  }
-/* indexes the reverse bit map and alphabet with bytes not cast to long */
-K b64encra(K rbt,K al,K x){
- TC(rbt,KG);TC(al,KC);TC(x,KG);
- P(rbt->n!=256,krr("length")); // reverse bit map should have entry for every possible byte
- K rx=ktn(KG,xn);
- J i;
- for(i=0;i<xn;i++)kG(rx)[i]=kG(rbt)[kG(x)[i]];
- K res=b64enc(rx);
- r0(rx);
- for(i=0;i<res->n;i++)kG(res)[i]=kG(al)[kG(rbt)[kG(res)[i]]];
- res->t=KC;
- R res; 
- }
-/* indexes the reverse bit map with bytes not cast to long */
-K b64decr(K rbt,K x){
+#define result(f,l,z) K res=f(rx);r0(rx);DO(res->n,kG(res)[i]=l);z;R res;
+Z K reverse(K rbt,K x){
  TC(rbt,KG);TC(x,KG);
- P(rbt->n!=256,krr("length")); // reverse bit map should have entry for every possible byte
+ P(rbt->n!=256,krr("length"));
  K rx=ktn(KG,xn);
  J i;
  for(i=0;i<xn;i++)kG(rx)[i]=kG(rbt)[kG(x)[i]];
- K res=b64dec(rx);
- r0(rx);
- for(i=0;i<res->n;i++)kG(res)[i]=kG(rbt)[kG(res)[i]];
- R res; 
+ R rx;}
+/* indexes the reverse bit map and alphabet casting bytes to long */
+K b64encra(K rbt,K al,K x){
+ TC(al,KC);
+ K rx=reverse(rbt,x);P(!rx,rx);
+ result(b64enc,kG(al)[kG(rbt)[kG(res)[i]]],res->t=KC);
+ }
+K b64decr(K rbt,K x){
+ K rx=reverse(rbt,x);P(!rx,rx);
+ result(b64dec,kG(rbt)[kG(res)[i]],);
  }
  
