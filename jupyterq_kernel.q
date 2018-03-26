@@ -56,7 +56,7 @@ srvstarterr:{starterr` sv("server startup error";x;y)} / execution server startu
 cleans:{@[hclose;;{}]each stdfd}                       / clean up redirected sockets if not done already
 / start server, windows uses named pipes, mac linux use sockets
 if[.z.o like"w*";
- npcreate:`:./jupyterq 2:`npcreate,1; / TODO name?
+ npcreate:`:./jupyterq 2:`npcreate,1;
  startsrv:{ / x is string port
   stdfd[`stdout`stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?0Ng}each`out`err;
   system"start /B cmd /C q jupyterq_server.q -q ",x," ",getenv[`JUPYTERQ_SERVERARGS]," ^>",oe[0]," 2^>",oe 1};
@@ -232,14 +232,24 @@ srvcmp.savescript:cmploadsave"savescript"              / saved a script through 
 srvcmp.comm_info:{[z;s;mc;res]sndstd mc;snd[z;s]kr[`comm_info_reply;mc]res;idle mc}
 srvcmp.commdef:{[z;s;mc;res]idle mc}                   / default completion action for comm messages
 
-/ TODO check all required packages can be imported somehow (even if import kx_backend inline fails..
-setenv[`PYTHONPATH]":;"[.z.o like"w*"]sv getenv each `PYTHONPATH`QHOME;
-/ check kx backend can be imported, if not may be because zlib (and maybe others) are opened by q before distribution specific ones, preload if so
-if[0~@[.p.import;`kxpy.kx_backend_inline;0];
- pre:{setenv[x]$[fexists a:.p.import[`sysconfig;`:get_config_var;<][`LIBDIR],"/",u;a,":";""],(u:.p.import[`ctypes.util;`:find_library;<]y),":",getenv x;};
- $[.z.o like"l*";pre[`LD_PRELOAD]`z;
-   .z.o like"m*;pre[`DYLD_INSERT_LIBRARIES]`z;
-   .z.o like"w*;'`nyi_win;'`nyi]];
+/ check all required modules can be imported, we shouldn't start the execution server if there are any missing dependencies
+p)def< checkimport(name):
+ import importlib,sys,traceback
+ try:
+  importlib.import_module(name)
+  return 0
+ except ModuleNotFoundError as e:
+  traceback.print_exc()
+  print("\nYou may need to run pip or conda to install the required python packages\n\tpip install -f requirements.txt"
+        "\nor with conda\n\tconda install --file requirements.txt\n".format(e.name,name),file=sys.stderr)
+ except ImportError as e:
+  traceback.print_exc()
+  import sysconfig
+  print("\nYou may need to set LD_LIBRARY_PATH/DYLD_LIBRARY_PATH to your python distribution's library directory: {0}".format(sysconfig.get_config_var('LIBDIR')))
+
+checkimport:{if[(::)~@[x;y;{}];exit 1]}checkimport      / exit on an import failure, frontend will notice and message should be printed
+checkimport each`matplotlib`bs4`kxpy.kx_backend_inline
+
 startsrv string system"p";
 
 \
