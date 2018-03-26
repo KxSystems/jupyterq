@@ -245,10 +245,11 @@ p)def< checkimport(name):
  except ImportError as e:
   traceback.print_exc()
   import sysconfig
+  # can be a conflict between system zlib, libssl and probably others which q may already have loaded by the time p.q is loaded
   print("\nYou may need to set LD_LIBRARY_PATH/DYLD_LIBRARY_PATH to your python distribution's library directory: {0}".format(sysconfig.get_config_var('LIBDIR')))
 
 checkimport:{if[(::)~@[x;y;{}];exit 1]}checkimport      / exit on an import failure, frontend will notice and message should be printed
-checkimport each`matplotlib`bs4`kxpy.kx_backend_inline
+checkimport each`matplotlib`bs4`kxpy.kx_backend_inline;
 
 startsrv string system"p";
 
