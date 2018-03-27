@@ -18,7 +18,6 @@ Jupyterq is still in development, please write to ai@kx.com with any issues or s
 - kdb+>=? v3.5 64-bit
 - Anaconda Python 3.x
 - [embedPy](https://github.com/KxSystems/embedPy)
-- Linux/Mac only (currently)
 
 
 ## Build and Installation
@@ -33,11 +32,24 @@ or with conda
 ```bash
 conda install --file requirements.txt
 ```
+### Download
 
-Then ensure QHOME is set and you have a working version of q in your PATH, and run
+Download the appropriate release archive from the [releases](../../releases/latest) page.
+
+
+### Linux/Mac
+
+Ensure QHOME is set and you have a working version of q in your PATH, and run
 
 ```bash
-./configure.q && make install
+./install.sh
+```
+
+### Windows
+Ensure QHOME is set and you have a working version of q in your PATH, and run
+
+```
+install.bat
 ```
 
 Jupyter console, notebook and QtConsole should work, Jupyter lab has not been tested
@@ -145,6 +157,9 @@ Along with k and q code, python code can be run in a q process using embedPy, ch
 **Note** this is experimental currently
 
 ![matplotlib](doc/matplotlib.gif "Matplotlib inline display")
+
+Cells with /%python anywhere in the cell at the start of a line will be evaluated as python code, this only intended to make it easier to copy and paste python snippets into kdb+ notebooks, the language for syntax highlighting and code completion and help is still q.
+
 
 
 ## Server command line arguments

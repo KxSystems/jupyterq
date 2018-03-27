@@ -1,6 +1,6 @@
 / jupyter kernel, no code or data lives here, communicates with a server proces but handles jupyter zeromq messaging
 \p 0W   / need for server process to connect
-\l p.q
+\l p.k
 \d .qpk
 \l jupyterq_pyzmq.q / zero mq messaing
 
@@ -28,6 +28,7 @@ ts:{@[string .z.p;4 7 10;:;"--T"],"Z"}                 / ISO 8601 UTC timestamp
 df:{x k?[;y]k:key x}                                   / helper, return entry at ` for a dict of funcs if y not present
 acb:`:./jupyterq 2:`acb,1                              / add callback to q, calling cb below
 rcb:`:./jupyterq 2:`rcb0x,2                            / remove callback from q
+cb:{$[x in key fd2s;zcb x;x in stdfd;stdcb x;]}        / call correct callback for socket
 md:{(1#x)!1#y}                                         / make one item dict
 .z.exit:{cleanz`;cleans`}                              / clean zeromq sockets and server process before exit
 .z.pc:{if[x~neg srvh;exit 2]}                          / server exited (change if ever supports connection to running servers)
@@ -35,15 +36,14 @@ fmterr:{$[0=type x;.z.s'[x];"\033[0;31m",x,"\033[0m"]} / put color codes (as uni
 starterr:{-2 x;exit 1;}                                / error on startup
 
 / for split into kernel and execution server
-fifos:`stdout`stderr!2#0Ni;                            / fds for fifos
-fifofs:`stdout`stderr!2#`;                             / fifo filenames
-fifocb:{                                               / send stdout/err to frontend
- snd[();io]kr[`stream;logdeb srvq[0;2]]
-  logdeb`name`text!(fifos?x;"c"$y)}
-ofifo:`:./jupyterq 2:`ofifo,1                          / open fifo as sym (not hsym), non blocking
-rfifo:{r:0#0x0;while[not 0~b:@[read1;x;0];r,:b];r}     / read everything available from fifo
-sndstd:{{if[count o:rfifo fifos y;snd[();io]           / send any available stdout/err from server to clients
- kr[`stream;x]`name`text!(y;"c"$o)]}[x]'[key fifos]}
+stdn:1 2i!key stdfd:`stdout`stderr!2#0Ni;
+rfd:{if[not count r:read1 x;rcb[x;1b]];r}              / read, if socket closed remove it with sd0x(fd,1)
+rstd:{r:0#0x0;while[not 0~b:@[rfd;x;0];r,:b];r}        / read all available from socket
+regstd:{stdfd[stdn x]:fd:.z.w;rcb[fd;0b];acb fd}       / register fd as a stdout/err redirection
+stdcb:{if[count[srvq]&count o:rstd x;snd[();io]        / callback when stdout/err received from server, x is fd
+ kr[`stream;srvq[0;2]]`name`text!(stdfd?x;"c"$o)]}
+sndstd:{{if[count o:rstd stdfd y;snd[();io]            / read all available stdout/err and publish
+  kr[`stream;x]`name`text!(y;"c"$o)]}[x]'[stdn]}
 srvq:()                                                / holds queue of zids,sockets and msgs, for use in fifocb
 srvqdrop:{srvq::1 _ srvq}                              / drop a tuple of (zmqids;socket;messagecontent) from queue
 srvh:0N                                                / execution server's handle
@@ -53,7 +53,16 @@ pending:()                                             / pending commands for se
 pend:{pending,:enlist x}                               / queue a command to the server
 srvreg:{srvh::neg .z.w;srvh each pending;pending::()}  / server registration, exec all pending messages
 srvstarterr:{starterr` sv("server startup error";x;y)} / execution server startup error
-cleans:{{hdel hsym x}each fifofs`stdout`stderr}        / clean up fifos, we're about to exit
+cleans:{@[hclose;;{}]each stdfd}                       / clean up redirected sockets if not done already
+/ start server, windows uses named pipes, mac linux use sockets
+if[.z.o like"w*";
+ npcreate:`:./jupyterq 2:`npcreate,1;
+ startsrv:{ / x is string port
+  stdfd[`stdout`stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?0Ng}each`out`err;
+  system"start /B cmd /C q jupyterq_server.q -q ",x," ",getenv[`JUPYTERQ_SERVERARGS]," ^>",oe[0]," 2^>",oe 1};
+ .z.ts:{stdcb each stdfd;};system"t 50";]; / TODO can we select on named pipe
+if[not .z.o like"w*";
+ startsrv:{system"q jupyterq_server.q -q ",x," ",getenv[`JUPYTERQ_SERVERARGS]}];
 
 / 0mq socket management
 cleanz:{{rcb[zsock.fd x;0b];zsock.destroy x}'[socks]}  / clean up sockets, we're about to exit
@@ -70,7 +79,7 @@ krh:{`version`date`session`username`msg_type`msg_id!   / new kernel response hea
  (`5.1;ts[];sid;.z.u;x;rand 0Ng)}
 sndstat:{snd[();io]kr[`status;y]md[`execution_state]x} / send status x with parent message y
 snd:{[z;s;mcr]                                         / send a message to a socket with content mcr
- zmsg.addC[msg:zmsg.new`]'[sm[z]mcr];zmsg.send[msg]s}
+ zmsg.addC[msg:zmsg.new`]'[sm[z]logdeb mcr];zmsg.send[msg]s}
 idle:{srvqdrop sndstat[`idle]x}                        / update status to idle and drop parent message from the server q
 
 / signing
@@ -92,7 +101,7 @@ ep:l[;{@[(0;)@prse@;x;{(1;x)}]}]                       / check parsing
 / main callback on fd, read all available then pop char[]'s from each. For each message (except hbs) we have
 / ({zmqidents};"<IDS|MSGS>";hmacsig;header;parentheader;metadata;content;{extradata...})
 / everything after the hmacsig should be deserializable json dicts (as strings)
-cb:{
+zcb:{
  msgs:0#x:fd2s x;
  / recv all available on socket, *must* be everything so callback is invoked next time
  while[not(::)~last msgs:msgs,zmsg.recvnowait x;];
@@ -112,7 +121,7 @@ h.sh:{[s;m;n]
  r:df[ch.sh;`$mc .`header`msg_type][di#c;s]mc;zmsg.destroy m;
  if[not 0b~r;sndstat[`idle;mc]]; / only send finished if not waiting for server callback
  }
-h.si:h.cn:h.sh / control we treat like shell as there's one thread for everyone, stdin not used by us
+h.si:h.cn:h.sh / control and stdin we treat like shell as there's one thread for everyone
 
 / channel/msg_type specific request handlers
 ch.sh.kernel_info_request:{[z;s;mc]
@@ -147,6 +156,7 @@ ch.sh.complete_request:srvexec`complete
 ch.sh.inspect_request:srvexec`inspect
 
 ch.sh.shutdown_request:{[z;s;mc]if[last allowstop;snd[z;s]kr[`shutdown_reply;mc]md[`restart]mc .`content`restart;exit 0]}
+ch.sh.input_reply:{[z;s;mc]srvsi mc .`content`value;}  / pass back front end reply to waiting server
 
 / comms, all comms are owned and managed by execution server, just pass through to the server
 / frontend->server
@@ -161,18 +171,6 @@ sndcomm.close:sndcomm.gen[`comm_close]`comm_id`data
 /ch.sh.history_request:{[z;s;mc]} / TODO, not used by notebooks but used by console
 / unknown messages
 ch.sh[`]:{[z;s;mc].j.DEBU:mc;-2"Unrecognized message type ",mc[`header][`msg_type]," on channel ",string s2n s}
-
-/ start the execution server
-/ TODO windows, mac can use fifos
-startsrv:{
- if[not dexists`:/tmp/jupyterq;system"mkdir /tmp/jupyterq"]; / TODO windows
- srvopts:getenv`JUPYTERQ_SERVERARGS;
- fs:`$"/tmp/jupyterq/",/:raze each string`out`err,'.z.i;
- {if[not fexists x;system"mkfifo ",string x]}each fs;
- fifos,:`stdout`stderr!ofifo each fs;
- fifofs,:`stdout`stderr!fs;
- system"q jupyterq_server.q -q ",string[system"p"]," ",srvopts," >",string[fs 0]," 2>",string fs 1;
- }
 
 / a result from the server
 srvres:{[z;s;mc;res]
@@ -193,6 +191,9 @@ srvdis:{[z;s;mc;res]
   kr[`display_data;mc]`metadata`data`transient!(res 1;res 0;dd)];
  }
 srvclear:{[z;s;mc;res]snd[z;io]kr[`clear_output;mc]md[`wait]res}
+srvinput:{[z;s;mc;prompt;pass]
+ if[not mc . `content`allow_stdin;neg[.z.w](1;"Input requests not supported by this frontend");:()];
+ snd[z;si]kr[`input_request;mc]`prompt`password!(prompt;pass);}
 
 srvcmp.execute:{[z;s;mc;res]   / server has completed execute_request
  sndstd mc;                    / pending stdout/err msgs sent first
@@ -231,16 +232,26 @@ srvcmp.savescript:cmploadsave"savescript"              / saved a script through 
 srvcmp.comm_info:{[z;s;mc;res]sndstd mc;snd[z;s]kr[`comm_info_reply;mc]res;idle mc}
 srvcmp.commdef:{[z;s;mc;res]idle mc}                   / default completion action for comm messages
 
-/ TODO windows
-setenv[`PYTHONPATH]":;"[.z.o like"w*"]sv getenv each `PYTHONPATH`QHOME;
-/ check kx backend can be imported, if not may be because zlib (and maybe others) are opened by q before distribution specific ones, preload if so
-if[0~@[.p.import;`kxpy.kx_backend_inline;0];
- pre:{setenv[x]$[fexists a:.p.import[`sysconfig;`:get_config_var;<][`LIBDIR],"/",u;a,":";""],(u:.p.import[`ctypes.util;`:find_library;<]y),":",getenv x;};
- $[.z.o like"l*";pre[`LD_PRELOAD]`z;
-   .z.o like"m*;pre[`DYLD_INSERT_LIBRARIES]`z;
-   .z.o like"w*;'`nyi_win;'`nyi]];
-startsrv[]
+/ check all required modules can be imported, we shouldn't start the execution server if there are any missing dependencies
+p)def< checkimport(name):
+ import importlib,sys,traceback
+ try:
+  importlib.import_module(name)
+  return 0
+ except ModuleNotFoundError as e:
+  traceback.print_exc()
+  print("\nYou may need to run pip or conda to install the required python packages\n\tpip install -f requirements.txt"
+        "\nor with conda\n\tconda install --file requirements.txt\n".format(e.name,name),file=sys.stderr)
+ except ImportError as e:
+  traceback.print_exc()
+  import sysconfig
+  # can be a conflict between system zlib, libssl and probably others which q may already have loaded by the time p.q is loaded
+  print("\nYou may need to set LD_LIBRARY_PATH/DYLD_LIBRARY_PATH to your python distribution's library directory: {0}".format(sysconfig.get_config_var('LIBDIR')))
 
+checkimport:{if[(::)~@[x;y;{}];exit 1]}checkimport      / exit on an import failure, frontend will notice and message should be printed
+checkimport each`matplotlib`bs4`kxpy.kx_backend_inline;
+
+startsrv string system"p";
 
 \
 see http://jupyter-client.readthedocs.io/en/latest/messaging.html for details of requests and responses required

@@ -1,0 +1,23 @@
+#!/bin/bash
+ZO=$(echo "-1 string .z.o;"|q -q)
+if [ "x$QHOME" == "x" ]
+then
+ 	echo QHOME must be set >2
+	exit 1
+elif [ ! -d "$QHOME" ]
+then
+	echo QHOME:$QHOME does not exist >2
+elif [ ! -d "${QHOME}/${ZO}" ]
+then
+	echo mkdir -p ${QHOME}/${ZO} #TODO remove echo
+fi
+src=$(dirname $0)
+set -x
+jupyter kernelspec install --user --name=qpk ${src}/kernelspec
+cp ${src}/jupyterq*.q $QHOME
+cp -r ${src}/kxpy $QHOME
+cp ${src}/lib/${ZO}/jupyterq.so $QHOME/$ZO
+
+
+
+
