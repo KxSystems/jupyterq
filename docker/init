@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+[ -d /tmp/q ] \
+	|| { echo q non-functional, did you include the q directory? >&2; exit 1; }
+
+[ -f /tmp/q/kc.lic ] && cat /tmp/q/kc.lic > "$QHOME/kc.lic" || true
+[ -f /tmp/q/k4.lic ] && cat /tmp/q/k4.lic > "$QHOME/k4.lic" || true
+[ -f "$QHOME/kc.lic" -o -f "$QHOME/k4.lic" ] \
+	|| { echo missing kc.lic/k4.lic >&2; exit 1; }
+[ -f /tmp/q/l64.zip ] \
+	&& unzip -q -d "$QHOME" /tmp/q/l64.zip \
+	|| { echo missing l64.zip >&2; exit 1; }
+
+ln -s -t /usr/local/bin $QHOME/l64/q
+
+[ "$(echo '-1 getenv`QHOME;' | q -q)" = "$QHOME" ] \
+	|| { echo q non-functional >&2; exit 1; }
+
+cd /home/kx
+exec chpst -u kx -e /opt/kx/.env "$@"
