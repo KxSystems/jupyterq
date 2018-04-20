@@ -9,14 +9,14 @@ then
 	echo QHOME:$QHOME does not exist >2
 elif [ ! -d "${QHOME}/${ZO}" ]
 then
-	echo mkdir -p ${QHOME}/${ZO} #TODO remove echo
+	mkdir -p ${QHOME}/${ZO}
 fi
 src=$(dirname $0)
 set -x
 jupyter kernelspec install --user --name=qpk ${src}/kernelspec
 cp ${src}/jupyterq*.q $QHOME
 cp -r ${src}/kxpy $QHOME
-cp ${src}/lib/${ZO}/jupyterq.so $QHOME/$ZO
+cp ${src}/${ZO}/jupyterq.so $QHOME/$ZO
 
 
 
