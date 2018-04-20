@@ -1,0 +1,44 @@
+language: c
+os:
+- linux
+- osx
+compiler:
+- clang
+install:
+  # We do this conditionally because it saves us some downloading if the
+  # version is the same.
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+  - pip install -r requirements.txt
+script:
+- cp makefile.in makefile
+- make jupyterq
+- echo "Preparing version $TRAVIS_BRANCH-$TRAVIS_COMMIT"
+- zip -r jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.zip jupyterq*.q install.sh README.md LICENSE kxpy kernelspec importmatplotlib.q matplotlibexample.p kdb+Notebooks.ipynb m64/jupyterq.so l64/jupyterq.so || true
+- echo "Packaged as jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.zip"
+- mkdir -p $HOME/q
+- export QHOME=$HOME/q
+  # can't test install.sh without q so use make install
+- make install
+deploy:
+  provider: releases
+  api_key: "$GITHUB_APIKEY"
+  file_glob: true
+  file: jupyter*.zip
+  skip_cleanup: true
+  on:
+    tags: true
+notifications:
+  slack:
+   secure: "meErDcQPK9d3tJswHJSazBgTAF5j79P803LaB9OkctNixSV38efmXIiQzzgZ/+3xpybw8O7TCx7dcE3mq87J/p1iJAWSCY5xc5F3ouI0U7JyjJX464Im0aibYFhZrYr8ygEIl4yMqGn70Zh/sZ72Z/FdBlml0Xo558ax9zaQJFtBKeBXIqRhAQ78O6OxiPJ1koDURHIOdD/IU5Q8euYGtToR/B1YEwXjpPhJ9zfbaBXYJR8CM82zCULv/cgeNQ2wiXgS+pBW6RcbGKLhxUhIjb24FwECtrDJlUXlvWVnAE510sItWO2JAuEMnARCmtDHKq641Lpb+WeNGkr7SfaX3466hRIP/wmIQtBPnaNaY7jTzg4x8RXWQrSn7StBnDjk6fP4x801viwY70LnPEr0EoA8XR6wWwtNna31+K++UwyjKBACoKZPgj3Y9mVsDSugs4qvwOmpwCMbtQwS81YiZKLbiehj9iEUrLhZ6yhP8cXILrov3lTiKy0feDCUAREghRM6wP+ZUQiwmgpEDtXWseDEqlSkMdV4fQ19C58md0RykLKLB3P7AJMDnybqN9zkpnqPg6QHWnvPfhB6VA3OZ2Vi9ZIkxSRS/y6WT/UtDMQd1H5mWCcEkN3FzY5u1htBX6XODy5IWAwF5LDCDrY1tleNm1umH0Oh5eE89acBCMk="
+
