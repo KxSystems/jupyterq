@@ -16,7 +16,27 @@ FROM $embedpy_img AS embedpy
 
 ####
 
-FROM continuumio/miniconda3 AS miniconda
+FROM continuumio/miniconda3 AS anaconda
+
+#FROM base AS anaconda
+#
+## https://docs.anaconda.com/anaconda/install/hashes/Anaconda3-5.1.0-Linux-x86_64.sh-hash
+#ARG anaconda_version=5.1.0
+#ARG anaconda_url=https://repo.continuum.io/archive/Anaconda3-${anaconda_version}-Linux-x86_64.sh
+#ARG anaconda_md5=966406059cf7ed89cc82eb475ba506e5
+#ARG anaconda_sha256=7e6785caad25e33930bc03fac4994a434a21bc8401817b7efa28f53619fa9c29
+#
+#RUN apt-get -yy --no-install-recommends install curl ca-certificates bzip2 \
+#	&& apt-get clean \
+#	&& find /var/lib/apt/lists -type f -delete
+#
+#RUN curl -f -L --compressed -o /tmp/anaconda.sh ${anaconda_url} \
+#	&& test $(cat /tmp/anaconda.sh | md5sum -    | awk '{ print $1 }') = ${anaconda_md5} \
+#	&& test $(cat /tmp/anaconda.sh | sha256sum - | awk '{ print $1 }') = ${anaconda_sha256} \
+#	&& /bin/sh /tmp/anaconda.sh -b -p /opt/conda \
+#	&& rm /tmp/anaconda.sh
+#
+#RUN source /opt/conda/etc/profile.d/conda.sh
 
 ####
 
@@ -60,7 +80,7 @@ COPY --from=embedpy /opt/kx/embedPy /opt/kx/embedPy
 RUN ln -s -t /opt/kx/q/l64 /opt/kx/embedPy/p.so \
 	&& ln -s -t /opt/kx/q /opt/kx/embedPy/p.q /opt/kx/embedPy/p.k
 
-COPY --from=miniconda /opt/conda /opt/conda
+COPY --from=anaconda /opt/conda /opt/conda
 
 COPY . /opt/kx/jupyterq
 RUN chown -R kx:kx /opt/kx/jupyterq
