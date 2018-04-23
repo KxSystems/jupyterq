@@ -1,0 +1,42 @@
+version: 1.0.{build}
+image:
+- Visual Studio 2017
+artifacts:
+- path: jupyterq_windows-$(appveyor_repo_tag_name).zip
+skip_non_tags: false
+platform: x64
+build_script:
+- cmd: >-
+    
+    dir C:\Miniconda3\Scripts
+
+    set PATH=C:\Miniconda\3;C:\Miniconda3\Scripts;%PATH%
+
+    curl -fsSL -o k.h https://github.com/KxSystems/kdb/raw/master/c/c/k.h 
+
+    curl -fsSL -o q.lib https://github.com/KxSystems/kdb/raw/master/w64/q.lib
+
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+
+    mkdir w64 
+  
+    echo %QHOME%
+
+    cl /LD /Few64\jupyterq.dll q.lib /DKXVER=3 /Isrc\include src\c\jupyterq.c
+
+    pip install -r requirements.txt
+
+after_build:
+- cmd: >-
+
+    if "%APPVEYOR_REPO_TAG%"=="true" ( 7z a jupyterq_windows-%APPVEYOR_REPO_TAG_NAME%.zip jupyterq_*.q w64/jupyterq.dll install.bat kxpy kernelspec importmatplotlib.q matplotlibexample.p kdb+Notebooks.ipynb LICENSE README.md && appveyor PushArtifact jupyterq_windows-%APPVEYOR_REPO_TAG_NAME%.zip )
+
+    if "%APPVEYOR_REPO_TAG%"=="false" ( 7z a jupyterq_windows-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_VERSION%.zip jupyterq_*.q w64/jupyterq.dll install.bat kxpy kernelspec LICENSE README.md importmatplotlib.q matplotlibexample.p kdb+Notebooks.ipynb && appveyor PushArtifact jupyterq_windows-%APPVEYOR_REPO_BRANCH%-%APPVEYOR_BUILD_VERSION%.zip )
+deploy:
+ release: $(appveyor_repo_tag_name)
+ provider: GitHub
+ auth_token: $(GITHUB_APIKEY)
+ on:
+  appveyor_repo_tag: true
+ 
+
