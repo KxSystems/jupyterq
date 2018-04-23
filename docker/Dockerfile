@@ -61,7 +61,7 @@ LABEL	org.label-schema.schema-version="1.0" \
 	org.label-schema.build-date="$BUILD_DATE" \
 	org.label-schema.docker.cmd="docker run -v `pwd`/q:/tmp/q -p $PORT:$PORT kxsys/jupyterq"
 
-RUN apt-get -yy --no-install-recommends install unzip rlwrap python3 libpython3.5 runit \
+RUN apt-get -yy --no-install-recommends install unzip rlwrap python3 libpython3.5 runit libgl1-mesa-glx \
 	&& apt-get clean \
 	&& find /var/lib/apt/lists -type f -delete
 
