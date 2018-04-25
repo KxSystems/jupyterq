@@ -1,8 +1,6 @@
 / jupyter kernel, no code or data lives here, communicates with a server proces but handles jupyter zeromq messaging
 \p 0W   / need for server process to connect
-\l p.k
 \d .qpk
-\l jupyterq_pyzmq.q / zero mq messaing
 
 / common variables
 opts:first each .Q.opt .z.x                            / command line args (kernel cmdline args)
@@ -15,15 +13,15 @@ cds:.j.k"c"$read1 hsym`$opts`cds                       / connection details
 fd2s:(0#0i)!0#0                                        / file descriptor (int) -> 0mq socket (long)
 s2n:(0#0)!0#`                                          / 0mq socket to name
 socks:0#0                                              / open zmq socks
-deb:$[`debug in key opts;"B"$opts`debug;0b]            / debug put debug = 1b in kernel.json for debug messages
+deb:"B"$getenv`JUPYTERQ_DEBUG                          / debug set JUPYTERQ_DEBUG=1 in environment for debug messages
 / 0mq ports
 cports:`sh`io`si`cn`hb!string"j"$cds`shell_port`iopub_port`stdin_port`control_port`hb_port
-
 / general utils
 sstring:{$[10=type x;;string]x}                        / string convert, or leave char[] alone
 fexists:{x~key x:hsym`$sstring x}                      / file exists
 dexists:{11=type key hsym`$sstring x}                  / directory exists
 logdeb:{if[deb;0N!x];x};                               / debug
+debmsg:{if[deb;-1"jupyterq_kernel: ",sstring x]}       / debug message
 ts:{@[string .z.p;4 7 10;:;"--T"],"Z"}                 / ISO 8601 UTC timestamp
 df:{x k?[;y]k:key x}                                   / helper, return entry at ` for a dict of funcs if y not present
 acb:`:./jupyterq 2:`acb,1                              / add callback to q, calling cb below
@@ -44,7 +42,7 @@ stdcb:{if[count[srvq]&count o:rstd x;snd[();io]        / callback when stdout/er
  kr[`stream;srvq[0;2]]`name`text!(stdfd?x;"c"$o)]}
 sndstd:{{if[count o:rstd stdfd y;snd[();io]            / read all available stdout/err and publish
   kr[`stream;x]`name`text!(y;"c"$o)]}[x]'[stdn]}
-srvq:()                                                / holds queue of zids,sockets and msgs, for use in fifocb
+srvq:()                                                / holds queue of zids,sockets and msgs, for use in stdcb
 srvqdrop:{srvq::1 _ srvq}                              / drop a tuple of (zmqids;socket;messagecontent) from queue
 srvh:0N                                                / execution server's handle
 sndsrv:{$[null srvh;pend;srvh]x}                       / queue or send command to server
@@ -63,10 +61,15 @@ if[.z.o like"w*";
  .z.ts:{stdcb each stdfd;};system"t 50";]; / TODO can we select on named pipe
 if[not .z.o like"w*";
  startsrv:{system"q jupyterq_server.q -q ",x," ",getenv[`JUPYTERQ_SERVERARGS]}];
+debmsg"loading embedPy";
+\l p.k
+debmsg"loading pyzmq";
+\l jupyterq_pyzmq.q                                    / zero mq messaging
 
 / 0mq socket management
 cleanz:{{rcb[zsock.fd x;0b];zsock.destroy x}'[socks]}  / clean up sockets, we're about to exit
 / setup sockets and add callbacks through sd1
+debmsg"zeromq socket setup";
 {[t;x]x set last socks,:zsock[t][`$cds.transport,"://",cds.ip,":",cports x]}''[`new_router`new_pub;(`sh`si`cn`hb;`io)];
 {[x]fd2s[fd:zsock.fd x]:x:value sx:x;s2n[x]:sx;acb fd}'[`sh`si`cn`hb];
 
@@ -94,9 +97,12 @@ json:{ssr[.j.j x;"\033";"\\u001b"]}                    / NOTE octal escapes aren
 / this is 'script like' execution of code x by function y, used here to check parsing
 k)l:{r@&~(::)~'r:y{x y}'"\n"/:'x(&|1^\|0N 0 1"/ "?*:'x[i],'"/")_i:&~|':(b?-1)#b:+\-/(x:$[@x;`\:;]x)~\:/:+,"/\\"}
 
-prse:{$[")"=x 1;$[flang x;1;"\\"=x 2;1;-5!x];parse x]} / like q.parse but allow q)\syscmd, used for parsing only not during evaluation, can have k)q)q)k)... but don't parse foreign langs
-flang:{$[-7=type x;x;")"~x 1;$[x[0]in"qk";2_x;1];0]}/  / there's a foreign language
-ep:l[;{@[(0;)@prse@;x;{(1;x)}]}]                       / check parsing
+prse:{$[flang x:"q)",x;1;"\\"=llang[x]2;1;-5!x]}       / like q.parse but allow q)\syscmd, used for parsing only not during evaluation, can have k)q)q)k)... but don't parse foreign langs
+flang:{$[-7=type x;x;dsl x;$[x[0]in"qk";2_x;1];0]}/    / there's a foreign language
+llang:{$[dsl[x]&dsl 2_x;2_;]x}/                        / trim x to last language
+dsl:{x like"[A-Za-z])*"}                               / x is a dsl
+ep:{$[any(` vs x)like"/%python*";1 2#0;                / check parsing
+      l[;{@[(0;)@prse@;x;{(1;x)}]}]x]}
 
 / main callback on fd, read all available then pop char[]'s from each. For each message (except hbs) we have
 / ({zmqidents};"<IDS|MSGS>";hmacsig;header;parentheader;metadata;content;{extradata...})
@@ -247,11 +253,12 @@ p)def< checkimport(name):
   import sysconfig
   # can be a conflict between system zlib, libssl and probably others which q may already have loaded by the time p.q is loaded
   print("\nYou may need to set LD_LIBRARY_PATH/DYLD_LIBRARY_PATH to your python distribution's library directory: {0}".format(sysconfig.get_config_var('LIBDIR')))
-
+debmsg"check imports";
 checkimport:{if[(::)~@[x;y;{}];exit 1]}checkimport      / exit on an import failure, frontend will notice and message should be printed
 checkimport each`matplotlib`bs4`kxpy.kx_backend_inline;
-
+debmsg"start server";
 startsrv string system"p";
+debmsg"completed loading";
 
 \
 see http://jupyter-client.readthedocs.io/en/latest/messaging.html for details of requests and responses required
