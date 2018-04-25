@@ -23,7 +23,6 @@ if[not .z.o like"w*";
  .z.pc:{if[x~neg krnh;revert'[origfd;1 2i]]};          / redirect to original when kernel disconnects
  rvfd:redir'[std;1 2i];                                / redirect the output/error, keep fds to original streams in rvfd
  ];
-
 lf[0b]`p.k
 lf[0b]`jupyterq_help.q                                 / interactive help
 lf[0b]`jupyterq_b64.q                                  / for images (must be be encoded in json)
@@ -38,15 +37,11 @@ jconv:{jloads .j.j x}                                  / convert q to json then 
 comms:(`u#enlist"")!enlist`targ`data`py!3#()           / currently open comms, comm_id!info
 
 / ensure python stdout/err displayed, python lets us pass through a func, so we could send it via normal socket, but writing it to q stdout/err for consistency
-p)import io
-p)class> stdwriter(io.TextIOBase):
- def __init__(self,qfunc=None):
-  self.qfunc=qfunc
- def write(self, stuff):
-  self.qfunc(stuff)
-{.p.import[`sys][:;x;stdwriter y]}'[`:stdout`:stderr;{1 x},{2 x}];
+{.p.import[`sys;x][:;`:write;{x y;count y}y]}'[`:stdout`:stderr;1 2];
+
 / send request to frontend for python getpass.getpass and input functions
 / TODO readline()
+p)import io
 p)class> stdreader(io.TextIOBase):
  def __init__(self,qfunc=None):
   import getpass
