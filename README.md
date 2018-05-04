@@ -61,7 +61,7 @@ If you have a similar issue using Anaconda Python, the command below may resolve
 
 If you have [Docker installed](https://www.docker.com/community-edition) you can alternatively create a directory called `q` and place your `kc.lic` (or `k4.lic`) and `l64.zip` files into a `q` directory and run:
 
-    docker run -it -v `pwd`/q:/tmp/q -p 8888:8888 kxsys/jupyterq
+    docker run --rm -it -v `pwd`/q:/tmp/q -p 8888:8888 kxsys/jupyterq
 
 Now point your browser at http://localhost:8888/notebooks/kdb%2BNotebooks.ipynb.
 

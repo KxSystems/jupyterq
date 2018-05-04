@@ -9,7 +9,7 @@ This project builds the Docker image.
 
 # Preflight
 
-You will need [Docker installed](https://www.docker.com/community-edition) on your workstation; make sure it is a recent version as they are always breaking backwards compatibility.
+You will need [Docker installed](https://www.docker.com/community-edition) on your workstation; make sure it is a recent version.
 
 Check out a copy of the project with:
 
