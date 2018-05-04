@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+exec docker build -t $IMAGE_NAME \
+	${nocache:+--no-cache} \
+        --build-arg VCS_REF=`git rev-parse --short HEAD` \
+        --build-arg BUILD_DATE=`date -u +'%Y-%m-%dT%H:%M:%SZ'` \
+	${embedpy_img:+--build-arg embedpy_img=$embedpy_img} \
+	-f Dockerfile ..
