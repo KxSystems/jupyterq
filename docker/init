@@ -17,6 +17,8 @@ ln -s -t /usr/local/bin $QHOME/l64/q
 
 [ "$(echo '-1 getenv`QHOME;' | q -q)" = "$QHOME" ] \
 	|| { echo q non-functional >&2; exit 1; }
+[ "$(echo '.z.K>=3.5' | q -q)" = "1b" ] \
+	|| { echo "kdb+ version must be >= 3.5" >&2; exit 1; }
 
 cd /home/kx
 exec chpst -u kx -e /opt/kx/.env "$@"
