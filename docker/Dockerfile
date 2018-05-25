@@ -4,25 +4,32 @@ ARG embedpy_img=kxsys/embedpy:latest
 
 ####
 
-FROM debian:9 AS base
+FROM $embedpy_img AS embedpy
 
+# do not clean here, its cleaned later!
+# no upgrade either as it comes from embedPy
+RUN apt-get update
 
 ####
 
-FROM $embedpy_img AS embedpy
+FROM embedpy AS juypterq
 
-FROM embedpy
+RUN apt-get -yy --option=Dpkg::options::=--force-unsafe-io --no-install-recommends install \
+		build-essential \
+	&& apt-get clean \
+	&& find /var/lib/apt/lists -type f -delete
 
-# do not clean here, its cleaned later!
-RUN apt-get update \
-	&& apt-get -yy update
-
-RUN apt-get -yy --no-install-recommends install ca-certificates wget build-essential
-
-COPY . /opt/kx/jupyterq
+COPY makefile.in requirements.txt *.q *.p *.ipynb /opt/kx/jupyterq/
+COPY src/c/ /opt/kx/jupyterq/src/c/
+COPY src/include/ /opt/kx/jupyterq/src/include/
+COPY kxpy/ /opt/kx/jupyterq/kxpy/
+COPY kernelspec/ /opt/kx/jupyterq/kernelspec/
 
 RUN make -f makefile.in -C /opt/kx/jupyterq jupyterq
 
+####
+
+FROM embedpy
 
 ARG port=8888
 ENV PORT=${port}
@@ -43,17 +50,16 @@ LABEL	org.label-schema.schema-version="1.0" \
 	org.label-schema.build-date="$BUILD_DATE" \
 	org.label-schema.docker.cmd="docker run -v `pwd`/q:/tmp/q -p $PORT:$PORT kxsys/jupyterq"
 
-RUN apt-get -yy --no-install-recommends install libgl1-mesa-glx \
+RUN apt-get -yy --option=Dpkg::options::=--force-unsafe-io --no-install-recommends install \
+		libgl1-mesa-glx \
 	&& apt-get clean \
 	&& find /var/lib/apt/lists -type f -delete
 
-COPY . /opt/kx/jupyterq
-RUN chown -R kx:kx /opt/kx/jupyterq
+COPY --from=juypterq /opt/kx/jupyterq /opt/kx/jupyterq
+RUN chown kx:kx /opt/kx/jupyterq /opt/kx/jupyterq/kdb+Notebooks.ipynb
 RUN find /opt/kx/jupyterq -maxdepth 1 -type f -name 'jupyterq_*.q' | xargs ln -s -t /opt/kx/q \
 	&& ln -s -t /opt/kx/q /opt/kx/jupyterq/kxpy \
 	&& ln -s -t /opt/kx/q/l64 /opt/kx/jupyterq/l64/jupyterq.so
-
-COPY docker/init /init
 
 USER kx
 
@@ -72,7 +78,4 @@ RUN mkdir ~/.jupyter \
 USER root
 
 ENTRYPOINT ["/init"]
-CMD . /opt/conda/etc/profile.d/conda.sh \
-	&& conda activate kx \
-	&& printf "\npoint your browser at http://127.0.0.1:%s/notebooks/kdb%%2BNotebooks.ipynb\n\n" $PORT \
-	&& exec jupyter notebook --notebook-dir=/opt/kx/jupyterq --ip='0.0.0.0' --port=$PORT --no-browser
+CMD ["/bin/sh", "-l", "-c", "printf '\npoint your browser at http://127.0.0.1:%s/notebooks/kdb%%2BNotebooks.ipynb\n\n' $PORT && exec jupyter notebook --notebook-dir=/opt/kx/jupyterq --ip='0.0.0.0' --port=$PORT --no-browser"]
