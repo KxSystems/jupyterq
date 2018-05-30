@@ -1,3 +1,6 @@
-.*
+**/.*
+!.travis.yml
+
 docker/Dockerfile
+
 q
