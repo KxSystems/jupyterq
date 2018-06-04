@@ -59,11 +59,17 @@ If you have a similar issue using Anaconda Python, the command below may resolve
 
 ### Docker
 
-If you have [Docker installed](https://www.docker.com/community-edition) you can alternatively create a directory called `q` and place your `kc.lic` (or `k4.lic`) and `l64.zip` files into a `q` directory and run:
+If you have [Docker installed](https://www.docker.com/community-edition) you can alternatively run:
 
-    docker run --rm -it -v `pwd`/q:/tmp/q -p 8888:8888 kxsys/jupyterq
+    docker run -it -p 8888:8888 --name myjupyterq kxsys/jupyterq
 
 Now point your browser at http://localhost:8888/notebooks/kdb%2BNotebooks.ipynb.
+
+For subsequent runs, you will not be prompted to redo the license setup when calling:
+
+    docker start -ai myjupyterq
+
+**N.B.** [instructions regarding headless/presets are available](https://github.com/KxSystems/embedPy#headlesspresets)
 
 **N.B.** [build instructions for the image are available](docker/README.md)
 
