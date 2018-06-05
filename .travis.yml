@@ -24,8 +24,8 @@ script:
 - cp makefile.in makefile
 - make jupyterq
 - echo "Preparing version $TRAVIS_BRANCH-$TRAVIS_COMMIT"
-- zip -r jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.zip jupyterq*.q install.sh README.md LICENSE kxpy kernelspec importmatplotlib.q matplotlibexample.p kdb+Notebooks.ipynb m64/jupyterq.so l64/jupyterq.so || true
-- echo "Packaged as jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.zip"
+- tar czf jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz jupyterq*.q install.sh README.md LICENSE kxpy kernelspec importmatplotlib.q matplotlibexample.p kdb+Notebooks.ipynb [ml]64/jupyterq.so
+- echo "Packaged as jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz"
 - mkdir -p $HOME/q
 - export QHOME=$HOME/q
   # can't test install.sh without q so use make install
@@ -34,10 +34,27 @@ deploy:
   provider: releases
   api_key: "$GITHUB_APIKEY"
   file_glob: true
-  file: jupyter*.zip
+  file: jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz
   skip_cleanup: true
   on:
     tags: true
+jobs:
+  include:
+    - stage: docker
+      sudo: required
+      services:
+        - docker
+      script:
+        - docker build -t kxsys/jupyterq:latest -f docker/Dockerfile .
+        - docker tag kxsys/jupyterq:latest kxsys/jupyterq:$TRAVIS_BRANCH
+      deploy:
+        provider: script
+        script:
+          - echo $DOCKER_PASSWORD|docker login --username $DOCKER_USERNAME --password-stdin && docker push kxsys/jupyterq:latest && docker push kxsys/jupyterq:$TRAVIS_BRANCH
+        skip_cleanup: true
+        on:
+          tags: true
+          condition: $TRAVIS_BRANCH =~ ^[0-9]+\.
 notifications:
   slack:
    secure: "meErDcQPK9d3tJswHJSazBgTAF5j79P803LaB9OkctNixSV38efmXIiQzzgZ/+3xpybw8O7TCx7dcE3mq87J/p1iJAWSCY5xc5F3ouI0U7JyjJX464Im0aibYFhZrYr8ygEIl4yMqGn70Zh/sZ72Z/FdBlml0Xo558ax9zaQJFtBKeBXIqRhAQ78O6OxiPJ1koDURHIOdD/IU5Q8euYGtToR/B1YEwXjpPhJ9zfbaBXYJR8CM82zCULv/cgeNQ2wiXgS+pBW6RcbGKLhxUhIjb24FwECtrDJlUXlvWVnAE510sItWO2JAuEMnARCmtDHKq641Lpb+WeNGkr7SfaX3466hRIP/wmIQtBPnaNaY7jTzg4x8RXWQrSn7StBnDjk6fP4x801viwY70LnPEr0EoA8XR6wWwtNna31+K++UwyjKBACoKZPgj3Y9mVsDSugs4qvwOmpwCMbtQwS81YiZKLbiehj9iEUrLhZ6yhP8cXILrov3lTiKy0feDCUAREghRM6wP+ZUQiwmgpEDtXWseDEqlSkMdV4fQ19C58md0RykLKLB3P7AJMDnybqN9zkpnqPg6QHWnvPfhB6VA3OZ2Vi9ZIkxSRS/y6WT/UtDMQd1H5mWCcEkN3FzY5u1htBX6XODy5IWAwF5LDCDrY1tleNm1umH0Oh5eE89acBCMk="
