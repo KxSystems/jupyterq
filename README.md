@@ -57,6 +57,21 @@ If you have a similar issue using Anaconda Python, the command below may resolve
 
 ```conda install nomkl```
 
+### Docker
+
+If you have [Docker installed](https://www.docker.com/community-edition) you can alternatively run:
+
+    docker run -it -p 8888:8888 --name myjupyterq kxsys/jupyterq
+
+Now point your browser at http://localhost:8888/notebooks/kdb%2BNotebooks.ipynb.
+
+For subsequent runs, you will not be prompted to redo the license setup when calling:
+
+    docker start -ai myjupyterq
+
+**N.B.** [instructions regarding headless/presets are available](https://github.com/KxSystems/embedPy/docker/README.md#headlesspresets)
+
+**N.B.** [build instructions for the image are available](docker/README.md)
 
 ## Running after install
 
