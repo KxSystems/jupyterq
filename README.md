@@ -69,7 +69,7 @@ For subsequent runs, you will not be prompted to redo the license setup when cal
 
     docker start -ai myjupyterq
 
-**N.B.** [instructions regarding headless/presets are available](https://github.com/KxSystems/embedPy#headlesspresets)
+**N.B.** [instructions regarding headless/presets are available](https://github.com/KxSystems/embedPy/docker/README.md#headlesspresets)
 
 **N.B.** [build instructions for the image are available](docker/README.md)
 
