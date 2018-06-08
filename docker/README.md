@@ -16,7 +16,7 @@ To build the project locally you run:
 
 Once built, you should have a local `jupyterq` image, you can run the following to use it:
 
-    docker run -it jupyterq
+    docker run -it -p 8888:8888 jupyterq
 
 
 **N.B.** if you wish to use an alternative source for [embedPy](https://github.com/KxSystems/embedPy) then you can append `--build-arg embedpy_img=embedpy` to your argument list.
