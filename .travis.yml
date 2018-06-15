@@ -2,6 +2,8 @@ language: c
 os:
 - linux
 - osx
+git:
+  depth: 1
 compiler:
 - clang
 install:
@@ -44,6 +46,7 @@ jobs:
       sudo: required
       services:
         - docker
+      install: skip
       script:
         - docker build -t kxsys/jupyterq:latest -f docker/Dockerfile .
         - docker tag kxsys/jupyterq:latest kxsys/jupyterq:$TRAVIS_BRANCH
