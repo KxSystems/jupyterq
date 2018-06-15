@@ -2,7 +2,7 @@
 eb:`:./jupyterq 2:`b64enc,1     / encoded bytes, each byte is a (reversed bit) index into 0-64
 ebra:`:./jupyterq 2:`b64encra,3 / encoded chars, given alphabet and map of bytes to bit reversed bytes
 db:`:./jupyterq 2:`b64dec,1     / decode bytes (indexes into alphabet), to bit reversed original bytes
-dbr:`:./jupyterq 2:`b64decr,1   / decode bytes (indexes into alphabet), to original bytes
+dbr:`:./jupyterq 2:`b64decr,2   / decode bytes (indexes into alphabet), to original bytes
 / reverse bits in byte (just indexed when used)
 rbt:0b sv'reverse each 0b vs'"x"$til 256      
 / alphabet is standard, padding chars are "="
