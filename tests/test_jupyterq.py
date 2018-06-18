@@ -4,6 +4,7 @@ Tests for jupyterq, adapted from test_ipykernel.py from jupyter_kernel_test
 
 import unittest
 import jupyter_kernel_test as jkt
+import os
 
 class QKernelTests(jkt.KernelTests):
 
@@ -32,8 +33,8 @@ class QKernelTests(jkt.KernelTests):
     code_generate_error = '\'"anerror"'
 
     code_execute_result = [
-        {'code': "1 2 3+4", 'result': "5 6 7\n"},
-        {'code': "`a`b!1 2", 'result': "a| 1\nb| 2\n"}
+        {'code': "1 2 3+4", 'result': "5 6 7"+os.linesep},
+        {'code': "`a`b!1 2", 'result': "a| 1"+os.linesep+"b| 2"+os.linesep}
     ]
 
     code_display_data = [
