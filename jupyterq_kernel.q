@@ -95,7 +95,7 @@ json:{ssr[.j.j x;"\033";"\\u001b"]}                    / NOTE octal escapes aren
 
 / code parsing
 / this is 'script like' execution of code x by function y, used here to check parsing
-k)l:{r@&~(::)~'r:y{x y}'"\n"/:'x(&|1^\|0N 0 1"/ "?*:'x[i],'"/")_i:&~|':(b?-1)#b:+\-/(x:$[@x;`\:;]x)~\:/:+,"/\\"}
+k)l:{r@&~(::)~'r:y{x y}'"\n"/:'x(&|1^\|0N 0 0 1"/ \t"?*:'x[i],'"/")_i:&~|':(b?-1)#b:+\-/(x:$[@x;`\:;]x)~\:/:+,"/\\"}
 
 prse:{$[flang x:"q)",x;1;"\\"=llang[x]2;1;-5!x]}       / like q.parse but allow q)\syscmd, used for parsing only not during evaluation, can have k)q)q)k)... but don't parse foreign langs
 flang:{$[-7=type x;x;dsl x;$[x[0]in"qk";2_x;1];0]}/    / there's a foreign language
@@ -207,7 +207,7 @@ srvcmp.execute:{[z;s;mc;res]   / server has completed execute_request
  if[mc . `content`silent;:idle mc];
  err:res 0;exn::res 2;res@:1;  / results, res has (error;result;srvexeccount)
  / prep the execution reply or error
- reply:`status`execution_count!(`ok`error err;exn);
+ reply:`status`execution_count`payload`user_expressions!(`ok`error err;exn;();dd);
  if[err;logdeb(`error;res);reply,:`ename`evalue`traceback!fmterr each(res 0;res 0;("evaluation error:\n";res 0;""),res 1)];
  snd[z;s]kr[`execute_reply;mc]reply;
  idle mc;
