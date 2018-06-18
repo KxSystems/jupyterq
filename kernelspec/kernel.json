@@ -7,5 +7,5 @@
  ],
  "display_name": "Q 3.5",
  "language": "q",
- "env": {"JUPYTERQ_SERVERARGS":""}
+ "env": {"JUPYTERQ_SERVERARGS":"","MPLBACKEND":"Agg"}
 }
