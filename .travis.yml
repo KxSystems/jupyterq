@@ -21,17 +21,27 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - pip install -r requirements.txt
+  - if [ $TRAVIS_OS_NAME = linux ]; then QLIBDIR=l64; elif [ $TRAVIS_OS_NAME = osx ]; then QLIBDIR=m64; else echo "unknown OS ('$TRAVIS_OS_NAME')" >&2; exit 1; fi; export QLIBDIR
+  - conda install -c kx kdb # grab kdb+ with conda
+  - cp -r $(conda info --base)/q q && export QHOME=$(pwd)/q && export PATH=$QHOME/$QLIBDIR:$PATH
+  # grab latest embedpy
+  - if [[ "x$QLIC_KC" != "x" ]]; then
+      echo -n $QLIC_KC |base64 --decode > q/kc.lic;
+      mkdir embedpy && cd embedpy && echo 'getembedpy"latest"' | q ../build/getembedpy.q -q && cd ..;
+      pip install -r requirements.txt;
+    fi
+
 script:
-- cp makefile.in makefile
-- make jupyterq
+- make -f build/makefile jupyterq
 - echo "Preparing version $TRAVIS_BRANCH-$TRAVIS_COMMIT"
-- tar czf jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz jupyterq*.q install.sh README.md LICENSE kxpy kernelspec importmatplotlib.q matplotlibexample.p kdb+Notebooks.ipynb [ml]64/jupyterq.so
+- tar czf jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz jupyterq*.q install.sh README.md LICENSE kxpy kernelspec examples kdb+Notebooks.ipynb [ml]64/jupyterq.so
 - echo "Packaged as jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz"
-- mkdir -p $HOME/q
-- export QHOME=$HOME/q
-  # can't test install.sh without q so use make install
-- make install
+# install and test
+- if [[ "x$QLIC_KC" != "x" ]]; then
+    ./install.sh;
+    tests/test.sh;
+  fi
+
 deploy:
   provider: releases
   api_key: "$GITHUB_APIKEY"
