@@ -187,7 +187,7 @@ srvres:{[z;s;mc;res]
  / send actual content reply through io channel
  snd[z;io]$[err;
   kr[`error;mc]`ename`evalue`traceback!fmterr each (res 0;res 0;("evaluation error:\n";res 0;""),res 1);
-  kr[`execute_result;mc]`execution_count`metadata`data!(exn;dd;res)];
+  kr[`execute_result;mc]`execution_count`metadata`data!(exn;res 1;res 0)];
  }
 / a result from the server to be displayed with display_data
 srvdis:{[z;s;mc;res]
