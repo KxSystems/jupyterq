@@ -1,7 +1,8 @@
 / jupyter kernel, no code or data lives here, communicates with a server proces but handles jupyter zeromq messaging
 \p 0W   / need for server process to connect
 \d .qpk
-
+/ implementation version, set in builds, defaults to `development
+version:@[{JUPYTERQVERSION};0;`development];
 / common variables
 opts:first each .Q.opt .z.x                            / command line args (kernel cmdline args)
 dlm:"<IDS|MSG>"                                        / delimitter between zmq identities and message content
@@ -131,8 +132,8 @@ h.si:h.cn:h.sh / control and stdin we treat like shell as there's one thread for
 
 / channel/msg_type specific request handlers
 ch.sh.kernel_info_request:{[z;s;mc]
- reply:select protocol_version:`5.1,implementation:`qpk,implementation_version:`0.0.1,
-  banner:("KDB+ v",string[.z.K]," ",string[.z.k]," kdb+ kernel for jupyter v 0.0.1"),help_links:enlist`text`url!("kdb+ help";"http://code.kx.com"),
+ reply:select protocol_version:`5.1,implementation:`qpk,implementation_version:.qpk.version,
+  banner:("KDB+ v",string[.z.K]," ",string[.z.k]," kdb+ kernel for jupyter, jupyterQ v",string .qpk.version),help_links:enlist`text`url!("kdb+ help";"http://code.kx.com"),
   language_info:(select name:`q,version:(string[.z.K],".0"),mimetype:"text/x-q",file_extension:`.q from .qpk.dd) from dd;
  :snd[z;s]kr[`kernel_info_reply;mc;reply];
  }

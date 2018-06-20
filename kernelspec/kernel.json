@@ -5,7 +5,7 @@
   "-cds",
   "{connection_file}"
  ],
- "display_name": "Q 3.5",
+ "display_name": "Q (kdb+)",
  "language": "q",
  "env": {"JUPYTERQ_SERVERARGS":"","MPLBACKEND":"Agg"}
 }

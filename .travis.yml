@@ -34,6 +34,9 @@ install:
 script:
 - make -f build/makefile jupyterq
 - echo "Preparing version $TRAVIS_BRANCH-$TRAVIS_COMMIT"
+- IMPLEMENTATION=$(if [[ "x$TRAVIS_TAG" == "x" ]]; then echo $TRAVIS_BRANCH-$TRAVIS_COMMIT; else echo $TRAVIS_TAG; fi;)
+- perl -p -i -e 's/JUPYTERQVERSION/`\$\"'${IMPLEMENTATION}'\"/g' jupyterq_kernel.q
+- grep $IMPLEMENTATION jupyterq_kernel.q
 - tar czf jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz jupyterq*.q install.sh README.md LICENSE kxpy kernelspec examples kdb+Notebooks.ipynb [ml]64/jupyterq.so
 - echo "Packaged as jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz"
 # install and test
@@ -58,6 +61,8 @@ jobs:
         - docker
       install: skip
       script:
+        - IMPLEMENTATION=$(if [[ "x$TRAVIS_TAG" == "x" ]]; then echo $TRAVIS_BRANCH-$TRAVIS_COMMIT; else echo $TRAVIS_TAG; fi;)
+        - perl -p -i -e 's/JUPYTERQVERSION/`\$\"'${IMPLEMENTATION}'\"/g' jupyterq_kernel.q
         - docker build -t kxsys/jupyterq:latest -f docker/Dockerfile .
         - docker tag kxsys/jupyterq:latest kxsys/jupyterq:$TRAVIS_BRANCH
       deploy:
