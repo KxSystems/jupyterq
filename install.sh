@@ -7,6 +7,7 @@ then
 elif [ ! -d "$QHOME" ]
 then
 	echo QHOME:$QHOME does not exist >2
+	exit 1
 elif [ ! -d "${QHOME}/${ZO}" ]
 then
 	mkdir -p ${QHOME}/${ZO}

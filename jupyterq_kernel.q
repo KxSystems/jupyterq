@@ -1,7 +1,8 @@
 / jupyter kernel, no code or data lives here, communicates with a server proces but handles jupyter zeromq messaging
 \p 0W   / need for server process to connect
 \d .qpk
-
+/ implementation version, set in builds, defaults to `development
+version:@[{JUPYTERQVERSION};0;`development];
 / common variables
 opts:first each .Q.opt .z.x                            / command line args (kernel cmdline args)
 dlm:"<IDS|MSG>"                                        / delimitter between zmq identities and message content
@@ -95,7 +96,7 @@ json:{ssr[.j.j x;"\033";"\\u001b"]}                    / NOTE octal escapes aren
 
 / code parsing
 / this is 'script like' execution of code x by function y, used here to check parsing
-k)l:{r@&~(::)~'r:y{x y}'"\n"/:'x(&|1^\|0N 0 1"/ "?*:'x[i],'"/")_i:&~|':(b?-1)#b:+\-/(x:$[@x;`\:;]x)~\:/:+,"/\\"}
+k)l:{r@&~(::)~'r:y{x y}'"\n"/:'x(&|1^\|0N 0 0 1"/ \t"?*:'x[i],'"/")_i:&~|':(b?-1)#b:+\-/(x:$[@x;`\:;]x)~\:/:+,"/\\"}
 
 prse:{$[flang x:"q)",x;1;"\\"=llang[x]2;1;-5!x]}       / like q.parse but allow q)\syscmd, used for parsing only not during evaluation, can have k)q)q)k)... but don't parse foreign langs
 flang:{$[-7=type x;x;dsl x;$[x[0]in"qk";2_x;1];0]}/    / there's a foreign language
@@ -131,8 +132,8 @@ h.si:h.cn:h.sh / control and stdin we treat like shell as there's one thread for
 
 / channel/msg_type specific request handlers
 ch.sh.kernel_info_request:{[z;s;mc]
- reply:select protocol_version:`5.1,implementation:`qpk,implementation_version:`0.0.1,
-  banner:("KDB+ v",string[.z.K]," ",string[.z.k]," kdb+ kernel for jupyter v 0.0.1"),help_links:enlist`text`url!("kdb+ help";"http://code.kx.com"),
+ reply:select protocol_version:`5.1,implementation:`qpk,implementation_version:.qpk.version,
+  banner:("KDB+ v",string[.z.K]," ",string[.z.k]," kdb+ kernel for jupyter, jupyterQ v",string .qpk.version),help_links:enlist`text`url!("kdb+ help";"http://code.kx.com"),
   language_info:(select name:`q,version:(string[.z.K],".0"),mimetype:"text/x-q",file_extension:`.q from .qpk.dd) from dd;
  :snd[z;s]kr[`kernel_info_reply;mc;reply];
  }
@@ -186,7 +187,7 @@ srvres:{[z;s;mc;res]
  / send actual content reply through io channel
  snd[z;io]$[err;
   kr[`error;mc]`ename`evalue`traceback!fmterr each (res 0;res 0;("evaluation error:\n";res 0;""),res 1);
-  kr[`execute_result;mc]`execution_count`metadata`data!(exn;dd;res)];
+  kr[`execute_result;mc]`execution_count`metadata`data!(exn;res 1;res 0)];
  }
 / a result from the server to be displayed with display_data
 srvdis:{[z;s;mc;res]
@@ -207,7 +208,7 @@ srvcmp.execute:{[z;s;mc;res]   / server has completed execute_request
  if[mc . `content`silent;:idle mc];
  err:res 0;exn::res 2;res@:1;  / results, res has (error;result;srvexeccount)
  / prep the execution reply or error
- reply:`status`execution_count!(`ok`error err;exn);
+ reply:`status`execution_count`payload`user_expressions!(`ok`error err;exn;();dd);
  if[err;logdeb(`error;res);reply,:`ename`evalue`traceback!fmterr each(res 0;res 0;("evaluation error:\n";res 0;""),res 1)];
  snd[z;s]kr[`execute_reply;mc]reply;
  idle mc;
