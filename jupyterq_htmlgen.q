@@ -6,7 +6,7 @@ hg.def:(0#`)!()
 / build a function that takes (optional) attribute dict attrs as first arg required val as second
 hg.bt:{ value"hg.ce{` sv raze(enlist\"<",x," \",(\" \"sv hg.pattr hg.def,first -1_x),\">\";` vs last x;enlist\"</",x,">\")}"}
 / same as above for empty tags
-hg.bet:{value"{` sv enlist \"<",x," \",(\" \"sv hg.pattr hg.def,first -1_x),\"/>\"}"}
+hg.bet:{value"{` sv enlist \"<",x," \",(\" \"sv hg.pattr hg.def,x),\"/>\"}"}
 / these are example tags, we can define our own taglist and emptytag list and call bts and bets on these respectively 
 hg.taglist :`a`abbr`acronym`address`area`b`bdo`big`blockquote`body`button`caption`cite`code`colgroup   
 hg.taglist,:`dd`del`div`dfn`dl`dt`em`fieldset`form`frameset`h1`h2`h3`h4`h5`h6`head`html`i`iframe`ins    

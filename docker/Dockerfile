@@ -19,13 +19,13 @@ RUN apt-get -yy --option=Dpkg::options::=--force-unsafe-io --no-install-recommen
 	&& apt-get clean \
 	&& find /var/lib/apt/lists -type f -delete
 
-COPY makefile.in requirements.txt *.q *.p *.ipynb /opt/kx/jupyterq/
+COPY build/makefile requirements.txt *.q *.p *.ipynb /opt/kx/jupyterq/
 COPY src/c/ /opt/kx/jupyterq/src/c/
-COPY src/include/ /opt/kx/jupyterq/src/include/
 COPY kxpy/ /opt/kx/jupyterq/kxpy/
 COPY kernelspec/ /opt/kx/jupyterq/kernelspec/
+COPY examples/ /opt/kx/jupyterq/examples/
 
-RUN make -f makefile.in -C /opt/kx/jupyterq jupyterq
+RUN make -C /opt/kx/jupyterq jupyterq
 
 ####
 
