@@ -12,7 +12,7 @@ Jupyter kernel for kdb+. Features include
 
 ## Requirements 
 - kdb+>=? v3.5 64-bit
-- Anaconda Python 3.x
+- Anaconda Python >= 3.5
 - [embedPy](https://github.com/KxSystems/embedPy)
 
 
