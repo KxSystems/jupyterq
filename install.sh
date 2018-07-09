@@ -1,4 +1,10 @@
 #!/bin/bash
+Q=$(which q)
+if [ "x$Q" == "x" ]
+then
+	echo q not found, must be on PATH >&2
+	exit 1
+fi
 ZO=$(echo "-1 string .z.o;"|q -q)
 if [ "x$QHOME" == "x" ]
 then
