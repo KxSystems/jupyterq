@@ -8,4 +8,4 @@ exit /b 0
 :version
 	set PATH=C:\Perl;%PATH%
 	perl -p -i.bak -e s/JUPYTERQVERSION/`\$\"%1\"/g jupyterq_kernel.q
-        7z a jupyterq_windows-%1.zip jupyterq_*.q w64/jupyterq.dll install.bat kxpy kernelspec examples kdb+Notebooks.ipynb LICENSE README.md && appveyor PushArtifact jupyterq_windows-%1.zip
+        7z a jupyterq_windows-%1.zip jupyterq_*.q w64/jupyterq.dll install.bat requirements.txt kxpy kernelspec examples kdb+Notebooks.ipynb LICENSE README.md && appveyor PushArtifact jupyterq_windows-%1.zip
