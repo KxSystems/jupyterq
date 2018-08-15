@@ -50,7 +50,7 @@ sndsrv:{$[null srvh;pend;srvh]x}                       / queue or send command t
 srvexec:{[f;z;s;mc]sndsrv(`.qpk.execmsg;f;z;s;mc)}     / exec a request on the server
 pending:()                                             / pending commands for server as it starts up
 pend:{pending,:enlist x}                               / queue a command to the server
-srvreg:{srvh::neg .z.w;srvh each pending;pending::()}  / server registration, exec all pending messages
+srvreg:{srvh::0-hopen x;srvh each pending;pending::()} / server registration, exec all pending messages
 srvstarterr:{starterr` sv("server startup error";x;y)} / execution server startup error
 cleans:{@[hclose;;{}]each stdfd}                       / clean up redirected sockets if not done already
 / start server, windows uses named pipes, mac linux use sockets

@@ -1,6 +1,7 @@
 / execution server, code, data lives in this process
 / TODO, closed std handle?
 \d .qpk
+\p 0W
 / load script y trapped, send response to kernel, x is continue on error
 lf:{.Q.trp[system;"l ",string y;{krnh(`.qpk.srvstarterr;y;.Q.sbt z);krnh[];if[not x;'y]}x]}
 F:Z:S:MC:(::)                                          / latest exec request from kernel,zmqid,socket and message
@@ -8,7 +9,7 @@ setstate:{[f;z;s;mc]F::f;Z::z;S::s;MC::mc}             / set latest message stat
 krnh:neg hopen"J"$.z.x 0;                              / handle to kernel
 krnsi:neg hopen"J"$.z.x 0;                             / handle to kernel for stdin requests
 krnsi({.qpk.srvsi:neg .z.w;};`)                        / register stdin handle on server
-krnh(`.qpk.srvreg;`);                                  / register
+krnh(`.qpk.srvreg;"j"$system"p");                      / register
 krn:{krnh x;krnh[];}                                   / send and async flush
 /stdout/err redirection, windows uses named pipes so not necessary
 if[not .z.o like"w*";
