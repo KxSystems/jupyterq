@@ -1,3 +1,4 @@
+stage: standalone
 language: c
 os:
 - linux
@@ -6,7 +7,7 @@ git:
   depth: 1
 compiler:
 - clang
-install:
+before_install:
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
@@ -19,6 +20,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
+install:
   # Useful for debugging any issues with conda
   - conda info -a
   - if [ $TRAVIS_OS_NAME = linux ]; then QLIBDIR=l64; elif [ $TRAVIS_OS_NAME = osx ]; then QLIBDIR=m64; else echo "unknown OS ('$TRAVIS_OS_NAME')" >&2; exit 1; fi; export QLIBDIR
@@ -30,15 +32,13 @@ install:
       mkdir embedpy && cd embedpy && echo 'getembedpy"latest"' | q ../build/getembedpy.q -q && cd ..;
       pip install -r requirements.txt;
     fi
+before_script:
+  - IMPLEMENTATION=$(if [[ "x$TRAVIS_TAG" == "x" ]]; then echo $TRAVIS_BRANCH-$TRAVIS_COMMIT; else echo $TRAVIS_TAG; fi;)
+  - perl -p -i -e 's/JUPYTERQVERSION/`\$\"'${IMPLEMENTATION}'\"/g' jupyterq_kernel.q
 
 script:
 - make -f build/makefile jupyterq
-- echo "Preparing version $TRAVIS_BRANCH-$TRAVIS_COMMIT"
-- IMPLEMENTATION=$(if [[ "x$TRAVIS_TAG" == "x" ]]; then echo $TRAVIS_BRANCH-$TRAVIS_COMMIT; else echo $TRAVIS_TAG; fi;)
-- perl -p -i -e 's/JUPYTERQVERSION/`\$\"'${IMPLEMENTATION}'\"/g' jupyterq_kernel.q
-- grep $IMPLEMENTATION jupyterq_kernel.q
 - tar czf jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz jupyterq*.q install.sh requirements.txt README.md LICENSE kxpy kernelspec examples kdb+Notebooks.ipynb [ml]64/jupyterq.so
-- echo "Packaged as jupyterq_$TRAVIS_OS_NAME-$TRAVIS_BRANCH.tgz"
 # install and test
 - if [[ "x$QLIC_KC" != "x" ]]; then
     ./install.sh;
@@ -55,14 +55,15 @@ deploy:
     tags: true
 jobs:
   include:
-    - stage: docker
+    - stage: deploy target
+      env:
+        - TARGET=docker
       sudo: required
       services:
         - docker
+      before_install: skip
       install: skip
       script:
-        - IMPLEMENTATION=$(if [[ "x$TRAVIS_TAG" == "x" ]]; then echo $TRAVIS_BRANCH-$TRAVIS_COMMIT; else echo $TRAVIS_TAG; fi;)
-        - perl -p -i -e 's/JUPYTERQVERSION/`\$\"'${IMPLEMENTATION}'\"/g' jupyterq_kernel.q
         - docker build -t kxsys/jupyterq:latest -f docker/Dockerfile .
         - docker tag kxsys/jupyterq:latest kxsys/jupyterq:$TRAVIS_BRANCH
       deploy:
@@ -73,6 +74,31 @@ jobs:
         on:
           tags: true
           condition: $TRAVIS_BRANCH =~ ^[0-9]+\.
+    - &conda_build
+      stage: deploy target
+      env:
+        - TARGET=conda
+      os:
+        - linux
+      install:
+        - conda install -q "conda-build<3.12"
+      script:
+        - if [[ "x$QLIC_KC" != "x" ]]; then mkdir -p q; echo -n $QLIC_KC |base64 --decode > q/kc.lic; export QLIC=$(pwd)/q; fi
+        - export JUPYTERQ_VERSION=$TRAVIS_BRANCH
+        - export JUPYTERQ_REQS=$(paste -sd "|" requirements.txt)
+        - conda build conda-recipe --output -c kx > packagenames.txt
+        - conda build -c kx conda-recipe --no-long-test-prefix
+      deploy:
+        provider: script
+        script:
+          - build/anaconda_upload.sh
+        skip_cleanup: true
+        on:
+          tags: true
+          condition: $TRAVIS_BRANCH =~ ^[0-9]+\.
+    - <<: *conda_build
+      os:
+        - osx
 notifications:
   slack:
    secure: "meErDcQPK9d3tJswHJSazBgTAF5j79P803LaB9OkctNixSV38efmXIiQzzgZ/+3xpybw8O7TCx7dcE3mq87J/p1iJAWSCY5xc5F3ouI0U7JyjJX464Im0aibYFhZrYr8ygEIl4yMqGn70Zh/sZ72Z/FdBlml0Xo558ax9zaQJFtBKeBXIqRhAQ78O6OxiPJ1koDURHIOdD/IU5Q8euYGtToR/B1YEwXjpPhJ9zfbaBXYJR8CM82zCULv/cgeNQ2wiXgS+pBW6RcbGKLhxUhIjb24FwECtrDJlUXlvWVnAE510sItWO2JAuEMnARCmtDHKq641Lpb+WeNGkr7SfaX3466hRIP/wmIQtBPnaNaY7jTzg4x8RXWQrSn7StBnDjk6fP4x801viwY70LnPEr0EoA8XR6wWwtNna31+K++UwyjKBACoKZPgj3Y9mVsDSugs4qvwOmpwCMbtQwS81YiZKLbiehj9iEUrLhZ6yhP8cXILrov3lTiKy0feDCUAREghRM6wP+ZUQiwmgpEDtXWseDEqlSkMdV4fQ19C58md0RykLKLB3P7AJMDnybqN9zkpnqPg6QHWnvPfhB6VA3OZ2Vi9ZIkxSRS/y6WT/UtDMQd1H5mWCcEkN3FzY5u1htBX6XODy5IWAwF5LDCDrY1tleNm1umH0Oh5eE89acBCMk="

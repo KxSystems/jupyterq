@@ -11,14 +11,18 @@ platform: x64
 build_script:
 - cmd: >-
 
-    build\buildscript.bat
+    build\build.bat
 
     tests\test.bat
+
+    build\conda_build.bat
 
 after_build:
 - cmd: >-
 
     build\package.bat
+
+    build\anaconda_upload.bat
 
 deploy:
  release: $(appveyor_repo_tag_name)
