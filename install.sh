@@ -21,7 +21,7 @@ fi
 src=$(dirname $0)
 set -x
 jupyter kernelspec install --user --name=qpk ${src}/kernelspec
-cp ${src}/jupyterq*.q $QHOME
+cp ${src}/jupyterq*.{q,q_} $QHOME
 cp -r ${src}/kxpy $QHOME
 cp ${src}/${ZO}/jupyterq.so $QHOME/$ZO
 

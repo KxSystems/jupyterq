@@ -8,7 +8,7 @@ F:Z:S:MC:(::)                                          / latest exec request fro
 setstate:{[f;z;s;mc]F::f;Z::z;S::s;MC::mc}             / set latest message state 
 krnh:neg hopen"J"$.z.x 0;                              / handle to kernel
 krnsi:neg hopen"J"$.z.x 0;                             / handle to kernel for stdin requests
-krnsi({.qpk.srvsi:neg .z.w;};`)                        / register stdin handle on server
+krnsi(`.qpk.srvregsi;`)                                / register stdin handle on server
 krnh(`.qpk.srvreg;"j"$system"p");                      / register
 krn:{krnh x;krnh[];}                                   / send and async flush
 /stdout/err redirection, windows uses named pipes so not necessary
