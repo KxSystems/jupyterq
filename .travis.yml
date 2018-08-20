@@ -89,9 +89,9 @@ jobs:
         - conda build conda-recipe --output > packagenames.txt
         - if [[ "x$QLIC_KC" != "x" ]];
           then
-           conda build -c kx conda-recipe $CONDA_BUILD_CHANNELS --no-long-test-prefix;
+           conda build -c kx $CONDA_BUILD_CHANNELS --no-long-test-prefix conda-recipe;
           else
-           conda build -c kx conda-recipe $CONDA_BUILD_CHANNELS --no-test;
+           conda build -c kx $CONDA_BUILD_CHANNELS --no-test conda-recipe;
           fi
       deploy:
         provider: script
