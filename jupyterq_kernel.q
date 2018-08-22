@@ -50,18 +50,19 @@ sndsrv:{$[null srvh;pend;srvh]x}                       / queue or send command t
 srvexec:{[f;z;s;mc]sndsrv(`.qpk.execmsg;f;z;s;mc)}     / exec a request on the server
 pending:()                                             / pending commands for server as it starts up
 pend:{pending,:enlist x}                               / queue a command to the server
-srvreg:{srvh::neg .z.w;srvh each pending;pending::()}  / server registration, exec all pending messages
+srvreg:{srvh::0-hopen x;srvh each pending;pending::()} / server registration, exec all pending messages
+srvregsi:{srvsi::neg .z.w;}                            / server register standard input handle
 srvstarterr:{starterr` sv("server startup error";x;y)} / execution server startup error
 cleans:{@[hclose;;{}]each stdfd}                       / clean up redirected sockets if not done already
 / start server, windows uses named pipes, mac linux use sockets
+srvcmd:{"q jupyterq_server.q",$[.z.f like"*_";"_";""]," -q ",x," ",getenv`JUPYTERQ_SERVERARGS}
 if[.z.o like"w*";
  npcreate:`:./jupyterq 2:`npcreate,1;
  startsrv:{ / x is string port
   stdfd[`stdout`stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?0Ng}each`out`err;
-  system"start /B cmd /C q jupyterq_server.q -q ",x," ",getenv[`JUPYTERQ_SERVERARGS]," ^>",oe[0]," 2^>",oe 1};
+  system"start /B cmd /C ",srvcmd[x]," ^>",oe[0]," 2^>",oe 1};
  .z.ts:{stdcb each stdfd;};system"t 50";]; / TODO can we select on named pipe
-if[not .z.o like"w*";
- startsrv:{system"q jupyterq_server.q -q ",x," ",getenv[`JUPYTERQ_SERVERARGS]}];
+if[not .z.o like"w*";startsrv:{system srvcmd x}];
 debmsg"loading embedPy";
 \l p.k
 debmsg"loading pyzmq";
