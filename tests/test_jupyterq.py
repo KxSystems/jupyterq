@@ -40,7 +40,7 @@ class QKernelTests(jkt.KernelTests):
     code_display_data = [
         {'code': "p)from IPython.display import HTML, display; display(HTML('<b>test</b>'))",
          'mime': "text/html"},
-        {'code': "p)from IPython.display import Math, display; display(Math('\\frac{1}{2}'))",
+        {'code': "p)from IPython.display import Math, display; display(Math('\\\\frac{1}{2}'))",
          'mime': "text/latex"}
     ]
 
