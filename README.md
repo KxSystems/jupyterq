@@ -75,6 +75,13 @@ There are two ways to install jupyterq on your local machine:
 conda install -c kx jupyterq
 ```
 
+3. Ensure you can run q *before* running jupyterq for the first time, you may need to generate an on demand licence
+
+```bash
+q
+...
+q)\\
+```
 
 ## Running after install
 
