@@ -14,7 +14,6 @@ requirements:
   build:
     - m2w64-make                     [win]
     - {{ compiler('c') }}
-    - jupyter
   host:
     - python
     - kdb
