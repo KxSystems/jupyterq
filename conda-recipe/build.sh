@@ -8,7 +8,9 @@ else
 fi
 make -f build/makefile jupyterq
 mkdir -p $QHOME/$QLIBDIR
-jupyter kernelspec install --user --name=qpk kernelspec
+JK=$PREFIX/share/jupyter/kernels/qpk
+mkdir -p $JK
+cp kernelspec/* $JK
 cp jupyterq*.q $QHOME
 cp -r kxpy $QHOME
 cp $QLIBDIR/jupyterq.so $QHOME/$QLIBDIR
