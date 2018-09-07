@@ -6,6 +6,8 @@
 lf:{.Q.trp[system;"l ",string y;{krnh(`.qpk.srvstarterr;y;.Q.sbt z);krnh[];if[not x;'y]}x]}
 F:Z:S:MC:(::)                                          / latest exec request from kernel,zmqid,socket and message
 setstate:{[f;z;s;mc]F::f;Z::z;S::s;MC::mc}             / set latest message state 
+iod:{y 0x06,("x"$"QPKIO"),(0x0 vs count mcs),mcs:-8!x} / write indication of start of stdio/err during message handling
+setstate:{[f;z;s;mc]F::f;Z::z;S::s;iod[MC::mc]'[1 2]}  / set latest message state 
 krnh:neg hopen"J"$.z.x 0;                              / handle to kernel
 krnsi:neg hopen"J"$.z.x 0;                             / handle to kernel for stdin requests
 krnsi(`.qpk.srvregsi;`)                                / register stdin handle on server
