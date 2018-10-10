@@ -4,16 +4,18 @@
 \p 0W
 / load script y trapped, send response to kernel, x is continue on error
 lf:{.Q.trp[system;"l ",string y;{krnh(`.qpk.srvstarterr;y;.Q.sbt z);krnh[];if[not x;'y]}x]}
+login:getenv`JUPYTERQ_LOGIN;                           / login details
+crhp:{`$"::",$[10=type x;;string][x],":",y}            / create handle with password
 F:Z:S:MC:(::)                                          / latest exec request from kernel,zmqid,socket and message
 setstate:{[f;z;s;mc]F::f;Z::z;S::s;MC::mc}             / set latest message state 
-krnh:neg hopen"J"$.z.x 0;                              / handle to kernel
-krnsi:neg hopen"J"$.z.x 0;                             / handle to kernel for stdin requests
+krnh:neg hopen crhp[.z.x 0;login];                     / handle to kernel
+krnsi:neg hopen crhp[.z.x 0;login];                    / handle to kernel for stdin requests
 krnsi(`.qpk.srvregsi;`)                                / register stdin handle on server
-krnh(`.qpk.srvreg;"j"$system"p");                      / register
+krnh(`.qpk.srvreg;crhp[system"p";login]);              / register
 krn:{krnh x;krnh[];}                                   / send and async flush
 /stdout/err redirection, windows uses named pipes so not necessary
 if[not .z.o like"w*";
- std:hopen'[2#"J"$.z.x 0];
+ std:hopen'[2#crhp[.z.x 0;login]];
  {y(`.qpk.regstd;x);y[]}'[1 2i;neg std];               / open and register stdout/error sockets on kernel
  redir:`:./jupyterq 2:`redir,2;                        / redirect std handle y to socket x
  revert:`:./jupyterq 2:`revert,2;                      / revert std handle y to fd x
@@ -24,6 +26,7 @@ if[not .z.o like"w*";
  .z.pc:{if[x~neg krnh;revert'[origfd;1 2i]]};          / redirect to original when kernel disconnects
  rvfd:redir'[std;1 2i];                                / redirect the output/error, keep fds to original streams in rvfd
  ];
+krn(`.qpk.closeport;`)
 lf[0b]`p.k
 lf[0b]`jupyterq_help.q                                 / interactive help
 lf[0b]`jupyterq_b64.q                                  / for images (must be be encoded in json)
