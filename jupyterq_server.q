@@ -5,17 +5,17 @@
 / load script y trapped, send response to kernel, x is continue on error
 lf:{.Q.trp[system;"l ",string y;{krnh(`.qpk.srvstarterr;y;.Q.sbt z);krnh[];if[not x;'y]}x]}
 login:getenv`JUPYTERQ_LOGIN;                           / login details
-crhp:{`$"::",$[10=type x;;string][x],":",y}            / create handle with password
+crhp:{$[""~y;x;`$"::",string[x],":",y]}                / create handle with optional username/password
 F:Z:S:MC:(::)                                          / latest exec request from kernel,zmqid,socket and message
 setstate:{[f;z;s;mc]F::f;Z::z;S::s;MC::mc}             / set latest message state 
-krnh:neg hopen crhp[.z.x 0;login];                     / handle to kernel
-krnsi:neg hopen crhp[.z.x 0;login];                    / handle to kernel for stdin requests
+krnh:neg hopen crhp["J"$.z.x 0;login];                 / handle to kernel
+krnsi:neg hopen crhp["J"$.z.x 0;login];                / handle to kernel for stdin requests
 krnsi(`.qpk.srvregsi;`)                                / register stdin handle on server
-krnh(`.qpk.srvreg;crhp[system"p";login]);              / register
+krnh(`.qpk.srvreg;crhp["j"$system"p";login]);              / register
 krn:{krnh x;krnh[];}                                   / send and async flush
 /stdout/err redirection, windows uses named pipes so not necessary
 if[not .z.o like"w*";
- std:hopen'[2#crhp[.z.x 0;login]];
+ std:hopen'[2#crhp["J"$.z.x 0;login]];
  {y(`.qpk.regstd;x);y[]}'[1 2i;neg std];               / open and register stdout/error sockets on kernel
  redir:`:./jupyterq 2:`redir,2;                        / redirect std handle y to socket x
  revert:`:./jupyterq 2:`revert,2;                      / revert std handle y to fd x
