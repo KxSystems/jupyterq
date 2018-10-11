@@ -32,7 +32,15 @@ md:{(1#x)!1#y}                                         / make one item dict
 .z.exit:{cleanz`;cleans`}                              / clean zeromq sockets and server process before exit
 .z.pc:{if[x~neg srvh;exit 2]}                          / server exited (change if ever supports connection to running servers)
 fmterr:{$[0=type x;.z.s'[x];"\033[0;31m",x,"\033[0m"]} / put color codes (as unicode) round text for error display
-starterr:{-2 x;exit 1;}                                / error on startup
+/ error on startup
+starterr:{-2` sv(h;"** ",x," **";h:(6+count x)#"*";"Press Ctrl+C");exit 1}
+
+/ password info 
+getpswf:{$[""~u:x 1+x?"-U";`;`$":",u]}                 / get -U argument
+kpf:getpswf .z.X                                       / kernel password file
+spf:getpswf" "vs SERVERARGS:getenv`JUPYTERQ_SERVERARGS / server password file
+login:getenv`JUPYTERQ_LOGIN                            / login details
+plmd5:{(x;":"sv@[":"vs x;1;2_-3!md5@])}                / password in plain and md5
 
 / for split into kernel and execution server
 stdn:1 2i!key stdfd:`stdout`stderr!2#0Ni;
@@ -52,10 +60,11 @@ pending:()                                             / pending commands for se
 pend:{pending,:enlist x}                               / queue a command to the server
 srvreg:{srvh::0-hopen x;srvh each pending;pending::()} / server registration, exec all pending messages
 srvregsi:{srvsi::neg .z.w;}                            / server register standard input handle
+closeport:{system"p 0";srvh"\\p 0"}                    / close kernel and server port
 srvstarterr:{starterr` sv("server startup error";x;y)} / execution server startup error
 cleans:{@[hclose;;{}]each stdfd}                       / clean up redirected sockets if not done already
 / start server, windows uses named pipes, mac linux use sockets
-srvcmd:{"q jupyterq_server.q",$[.z.f like"*_";"_";""]," -q ",x," ",getenv`JUPYTERQ_SERVERARGS}
+srvcmd:{"q jupyterq_server.q",$[.z.f like"*_";"_";""]," -q ",x," ",SERVERARGS}
 if[.z.o like"w*";
  npcreate:`:./jupyterq 2:`npcreate,1;
  startsrv:{ / x is string port
@@ -258,6 +267,18 @@ p)def< checkimport(name):
 debmsg"check imports";
 checkimport:{if[(::)~@[x;y;{}];exit 1]}checkimport      / exit on an import failure, frontend will notice and message should be printed
 checkimport each`matplotlib`bs4`kxpy.kx_backend_inline;
+debmsg"check passwords"                                         
+{$[count x;starterr;]x}
+ $[any"-u"in/:(.z.X;" "vs SERVERARGS);                 / trying to use -u for server or kernel, only -U supported
+   "-u not supported, only -U";
+  3=u:2 sv null kpf,spf;"";                            / neither kernel or server using -U, skip further checks
+  2=u;"kernel must use -U if server does";             / either server or kernel using -U but the other isn't
+  1=u;"server must use -U if kernel does";
+  ""~login;"Missing JUPYTERQ_LOGIN";                   / not provided login details in environment variable
+  not all{any plmd5[x]in read0 y}[login]'[kpf,spf];
+   "Wrong user:password in JUPYTERQ_LOGIN";            / provided login details aren't valid for both the kernel and server
+  "" /else everything ok
+  ];
 debmsg"start server";
 startsrv string system"p";
 debmsg"completed loading";
