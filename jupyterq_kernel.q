@@ -7,7 +7,7 @@ version:@[{JUPYTERQVERSION};0;`development];
 opts:first each .Q.opt .z.x                            / command line args (kernel cmdline args)
 dlm:"<IDS|MSG>"                                        / delimitter between zmq identities and message content
 dd:(0#`)!()                                            / default dict
-exn:-1                                                 / execution count
+exn:0                                                  / execution count
 sid:string first -1?0Ng                                / session id for kernel
 allowstop:1b;                                          / allow shutdown by client
 cds:.j.k"c"$read1 hsym`$opts`cds                       / connection details
@@ -76,7 +76,7 @@ if[.z.o like"w*";
   stdfd[`stdout`stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?0Ng}each`out`err;
   system"start /B cmd /C ",srvcmd[x]," ^>",oe[0]," 2^>",oe 1};
  .z.ts:{stdcb each stdfd;};system"t 50";]; / TODO can we select on named pipe
-if[not .z.o like"w*";startsrv:{system 0N!srvcmd x}];
+if[not .z.o like"w*";startsrv:{system srvcmd x}];
 debmsg"loading embedPy";
 \l p.k
 debmsg"loading pyzmq";
@@ -196,7 +196,6 @@ ch.sh[`]:{[z;s;mc].j.DEBU:mc;-2"Unrecognized message type ",mc[`header][`msg_typ
 
 / a result from the server
 srvres:{[z;s;mc;res]
- 0N!`insrvres;
  sndstd[];                     / pending stdout/err msgs sent first
  if[mc . `content`silent;:()]; / return early if silent
  err:res 0;exn::res 2;res@:1;  / results, res has (error;result;srvexeccount)
@@ -204,7 +203,6 @@ srvres:{[z;s;mc;res]
  snd[z;io]$[err;
   kr[`error;mc]`ename`evalue`traceback!fmterr each (res 0;res 0;("evaluation error:\n";res 0;""),res 1);
   kr[`execute_result;mc]`execution_count`metadata`data!(exn;res 1;res 0)];
- 0N!`outsrvres;
  }
 / a result from the server to be displayed with display_data
 srvdis:{[z;s;mc;res]
@@ -232,22 +230,12 @@ srvcmp.execute:{[z;s;mc;res]   / server has completed execute_request
  }
 
 srvcmp.complete:{[z;s;mc;res]  / server has completed complete_request
- 0N!res;0N!count res;
- if["invalid remote"~first res 1;
-  0N!reply:update status:`error from `ename`evalue`traceback!fmterr each(res[1;0];res[1;0];res[1;1]);
-  show reply;
-  snd[z;s]kr[`complete_reply;mc]reply;:sndstat[`idle]mc];                             
  ce:first res[1],mc .`content`cursor_pos;
  cs:first res[0],mc .`content`cursor_pos;
  snd[z;s]kr[`complete_reply;mc]`matches`cursor_start`cursor_end`metadata`status!(res 2;cs;ce;dd;`ok);
  sndstat[`idle]mc}
 
 srvcmp.inspect:{[z;s;mc;res]   / server has completed inspect_request
- 0N!`inspect;
- if["invalid remote"~first res 1;
-  0N!reply:update status:`error from `ename`evalue`traceback!fmterr each(res[1;0];res[1;0];res[1;1]);
-  show reply;
-  snd[z;s]kr[`complete_reply;mc]reply;:sndstat[`idle]mc];                             
  snd[z;s]kr[`inspect_reply;mc]`status`found`data`metadata!(`ok;not res~();res;dd);
  sndstat[`idle]mc}
 
