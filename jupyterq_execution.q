@@ -118,7 +118,7 @@ magic.savescript:{[z;s;c;mc;p]
  :(1;mc);
  }
 / treat code cell as containing python code, prepend p) to everything not indented
-magic.python:{[z;s;c;mc;p]mc[`content;`code]:` sv l[;"p)",]c _ p;(0;mc)}
+magic.python:{[z;s;c;mc;p]mc[`content;`code]:` sv l[;{0N!"p)",$["/%"~2#x;"#",;]x}]c _ p;(0;mc)}
  
 magics:enlist["/%loadscript*"]!enlist magic.loadscript
 magics[enlist"/%savescript*"]:enlist magic.savescript
@@ -141,8 +141,8 @@ bscs:bcs except":" / chars which break symbols, leading _ handled separately
 / find last token given x a string
 / nothing if 'in' a char[] literal or symbol
 token:{[e;x;c;p] / x code to be completed,c full code,p cursor_pos,e extend token for possible matches (0 for completion 1 for help)
- / inside string at the end, no matches, use parse as a shortcut, assumes code won't parse to a rand 0Ng
- if[{u~@[.q.parse;x;{$[y~1#Q;x;0Ng]}u:rand 0Ng]}x;:()];
+ / inside string at the end, no matches, use parse as a shortcut
+ if[@[{.q.parse x;0b};x;{x~1#Q}];:()];
  / reduce x to tail outside string
  x:{neg[reverse[x]?Q]#x}x;
  /now find if we're in a symbol at end, quotes are gone
@@ -165,13 +165,11 @@ token:{[e;x;c;p] / x code to be completed,c full code,p cursor_pos,e extend toke
  }
 etoken:{[c;p;r]min[u?bcs,".`"]#u:p _c}                  / extend a token for midword introspection/completion
 spath:{sx:string last x;
- $[0=count p:-1_x; / nothing left
-  ();
-  11=type k:key` sv p;(y[0]-count[sx];y 1;srt k where k like sx,"*");
-  ``z~p; / .z namespace doesn't actually exist but want to complete in it
-  / (length of replace text;end position of replace text;matches)
-  (y[0]-count[sx];y 1;srt kz where kz like sx,"*");
-  ()]}
+ f:{(y[0]-count x;y 1;srt z where z like x,"*")}[sx;y]; / (length of replace text;end position of replace text;possible matches)
+ $[0=count p:-1_x;();      / nothing left, no matches
+  11=type k:key` sv p;f k; / matches in containing namespace/dict
+  ``z~p;f kz;              / .z namespace doesn't actually exist but want to complete in it
+  ()]}                     / else no matches
 / valid token, only needs to handle possible inputs as alphanumeric and _
 vname:{lower[string[x]0]in .Q.a}
 / matches in q keywords and current namespace 
