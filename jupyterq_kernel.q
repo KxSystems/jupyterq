@@ -289,6 +289,7 @@ debmsg"check passwords"
   2=u;"kernel must use -U if server does";             / either server or kernel using -U but the other isn't
   1=u;"server must use -U if kernel does";
   ""~login;"Missing JUPYTERQ_LOGIN";                   / not provided login details in environment variable
+  not":"in login;"JUPYTERQ_LOGIN should be user:pass"; / bad login details
   not all{any plmd5[x]in read0 y}[login]'[kpf,spf];
    "Wrong user:password in JUPYTERQ_LOGIN";            / provided login details aren't valid for both the kernel and server
   "" /else everything ok
