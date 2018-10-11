@@ -43,26 +43,21 @@ readstdin:{krnsi(`.qpk.srvinput;Z;S;MC;x;y);$[1~first r:neg[krnsi][];'r 1;r]}
 
 execmsg:{[f;z;s;mc]setstate[f;z;s;mc];                 / handle a request from kernel, only handle locally if not a remote request
  if[not remote[f;z;s;mc];df[h;f][z;s]mc]}
-//execmsg:{[f;z;s;mc]setstate[f;z;s;mc];df[h;f][z;s]mc}
-remote:{[f;z;s;mc]                                     / check if request is for a remote server and forward if so
- remote:sum(c:` vs mc .`content`code)like"/%remote*";
- $[0=remote;:0b;
-   1<remote;snderr[f;z;s;mc;("too many /%remotes";"")];
-   fwd[f;z;s;mc]];1b}    / check if is single remote call and fwd if so, otherwise execute locally or error
-fwd:{[f;z;s;mc]
- remote:@[value;rdef:count[rid]_c first where(c:` vs mc .`content`code)like(rid:"/%remote"),"*";-1];
- $[-1~remote;snderr[f;z;s;mc;("invalid remote";` vs rdef)];
-   neg[remote](rexec;f;z;s;mc)]}
-snderr:{[f;z;s;mc;e]krn(`.qpk.srvres;z;s;mc;(1;e;exn));krncmp[f;z;s;mc;(1;e;exn)]}
 
-/
-   
-   / else check remote capability ... sync possibility to block, i.e. what we want, probably not, ok to block from UI perspective, but not server...
- 
-fwd:{[f;z;s;mc] / TODO error handling
- remote:@[value;count[rid]_c first where(c:` vs mc .`content`code)like(rid:"/%remote"),"*";-1];
- neg[remote](`.qpk.execmsg;f;z;s;mc);
- } / forward message for execution on remote server
-\
+/ /%remote ... handling
+remote:{[f;z;s;mc]                                     / check if request is for a remote server and forward if so
+ $[0=n:sum(` vs mc .`content`code)like"/%remote*";:0b; / no remote requests, will execute locally
+  1<n;snderr[f;z;s;mc;("too many /%remotes";"")];      / only one /%remote per cell allowed
+  fwd[f;z;s;mc]];1b}                                   / forward to a remote server
+fwd:{[f;z;s;mc]
+ rdef:count[rid]_c first where(c:` vs mc .`content`code)like(rid:"/%remote"),"*";
+ e:snderr[f;z;s;mc]{("invalid remote",y;` vs x)}[rdef]@;
+ $[-1~remote:@[value;rdef;-1];e" definition";
+   not type[remote]in -6 -7h;e", must be a handle";
+   not remote>2;e", must be a handle to a remote process";
+   @[neg[remote]@(rexec;f;z;s;mc);{x": ",y,", is the remote a valid handle?"}e]]}
+snderr:{[f;z;s;mc;e]                                   / send an error message to frontend and complete the request
+ krn(`.qpk.srvdis;z;s;mc;(1;e;exn));krncmp[f;z;s;mc;(1;e;exn)]}
+
 setqbackend[mpcb;sndsrvcomm;clearoutput;ipython];
 
