@@ -7,7 +7,7 @@ version:@[{JUPYTERQVERSION};0;`development];
 opts:first each .Q.opt .z.x                            / command line args (kernel cmdline args)
 dlm:"<IDS|MSG>"                                        / delimitter between zmq identities and message content
 dd:(0#`)!()                                            / default dict
-exn:-1                                                 / execution count
+exn:0                                                  / execution count
 sid:string first -1?0Ng                                / session id for kernel
 allowstop:1b;                                          / allow shutdown by client
 cds:.j.k"c"$read1 hsym`$opts`cds                       / connection details
@@ -43,16 +43,30 @@ login:getenv`JUPYTERQ_LOGIN                            / login details
 plmd5:{(x;":"sv@[":"vs x;1;2_-3!md5@])}                / password in plain and md5
 
 / for split into kernel and execution server
+/ stdout/err server redirection handling TODO
 stdn:1 2i!key stdfd:`stdout`stderr!2#0Ni;
 rfd:{if[not count r:read1 x;rcb[x;1b]];r}              / read, if socket closed remove it with sd0x(fd,1)
 rstd:{r:0#0x0;while[not 0~b:@[rfd;x;0];r,:b];r}        / read all available from socket
 regstd:{stdfd[stdn x]:fd:.z.w;rcb[fd;0b];acb fd}       / register fd as a stdout/err redirection
-stdcb:{if[count[srvq]&count o:rstd x;snd[();io]        / callback when stdout/err received from server, x is fd
- kr[`stream;srvq[0;2]]`name`text!(stdfd?x;"c"$o)]}
-sndstd:{{if[count o:rstd stdfd y;snd[();io]            / read all available stdout/err and publish
-  kr[`stream;x]`name`text!(y;"c"$o)]}[x]'[stdn]}
-srvq:()                                                / holds queue of zids,sockets and msgs, for use in stdcb
-srvqdrop:{srvq::1 _ srvq}                              / drop a tuple of (zmqids;socket;messagecontent) from queue
+IOHC:8+IODC:count IOD:0x06,"x"$"QPKIO"                 / delimitter written to stdio/err by server and counts
+iopending:`stdout`stderr!2#enlist 0#0x0                / pending bytes from stream in case partially read delimitter/parent mc
+iomc:`stdout`stderr!2#(::)                             / current parent message content to for stream
+sndio:{iopending[x]:0#0x0;                             / clear pending buffer and send io to frontent
+ snd[();io]kr[`stream;iomc x]`name`text!(x;"c"$y)}
+procio:{
+ if[not count y:iopending[x],y;:()];
+ if[not 0x06 in y;:sndio[x]y];
+ if[not 0x06~y 0;sndio[x](u:y?0x06)#y;:.z.s[x]u _y];
+ if[IOHC>count y;
+  :$[(u#y)~(u:IODC&count y);iopending[x]:y;sndio[x]y]];
+ if[not IOD~IODC#y;:sndio[x]y]; / user wrote something similar to our delimitter
+ :$[count[y]<IOHC+mcl:0x0 sv y IODC+til 8;
+  iopending[x]::y;
+  [iomc[x]:-9!y IOHC+til mcl;iopending[x]:0#0x0;.z.s[x](IOHC+mcl)_y]];
+ }
+stdcb:{procio[stdfd?x;rstd x]}                         / callback when stdout/err received from server, x is fd
+sndstd:{{procio[x;rstd stdfd x]}each key stdfd}        / read all available stdout/err and publish
+
 srvh:0N                                                / execution server's handle
 sndsrv:{$[null srvh;pend;srvh]x}                       / queue or send command to server
 srvexec:{[f;z;s;mc]sndsrv(`.qpk.execmsg;f;z;s;mc)}     / exec a request on the server
@@ -94,7 +108,7 @@ krh:{`version`date`session`username`msg_type`msg_id!   / new kernel response hea
 sndstat:{snd[();io]kr[`status;y]md[`execution_state]x} / send status x with parent message y
 snd:{[z;s;mcr]                                         / send a message to a socket with content mcr
  zmsg.addC[msg:zmsg.new`]'[sm[z]logdeb mcr];zmsg.send[msg]s}
-idle:{srvqdrop sndstat[`idle]x}                        / update status to idle and drop parent message from the server q
+idle:{sndstat[`idle]x}                                 / update status to idle
 
 / signing
 sig:.p.import[`hmac]`:new                              / hmac as foreign
@@ -102,7 +116,9 @@ hmac:{                                                 / hmac as char[]
  sig["x"$cds.key;`msg pykw"x"$x;
   `digestmod pykw`SHA256][`:hexdigest;<][]}
 sm:{[z;md]z,(dlm;hmac raze js),js:value json each md}  / sign message, given zmq ids and message dicts
-json:{ssr[.j.j x;"\033";"\\u001b"]}                    / NOTE octal escapes aren't converted to \uNNNN by .j.j in .z.K<3.6, not doing properly here, just the one I want \033
+/ use bytes.decode with errors='replace' to ensure we only send valid unicode to frontends
+decode:{x["x"$y;`errors pykw`replace]`}.p.import[`builtins;`:bytes]`:decode
+json:{decode ssr[.j.j x;"\033";"\\u001b"]}                    / NOTE octal escapes aren't converted to \uNNNN by .j.j in .z.K<3.6, not doing properly here, just the one I want \033
 
 / code parsing
 / this is 'script like' execution of code x by function y, used here to check parsing
@@ -155,7 +171,7 @@ ch.sh.is_complete_request:{[z;s;mc]
  :snd[z;s]kr[`is_complete_reply;mc]`status`indent!(;" ")$[any es;`invalid`incomplete(last[epr][1]in i)&all 0=-1_es;`complete];
  }
 
-/ check parsing, append z,s and mc to srvq, then pass to server and return false if no parse error to wait for server response
+/ check parsing, then pass to server and return false if no parse error to wait for server response
 ch.sh.execute_request:{[z;s;mc]
  es:(epr:ep(mcc:mc`content)`code)[;0]; / first check parsing
  if[any epr[;0];                       / couldn't parse, send back error reply and content
@@ -163,7 +179,6 @@ ch.sh.execute_request:{[z;s;mc]
    select status:`error,execution_count:.qpk.exn,ename:.qpk.fmterr"parse error",evalue:.qpk.fmterr epr[;1]first where es from dd;
   :snd[z]'[io,s;kr[;mc;]'[`error`execute_reply;(delete execution_count,status from reply;reply)]]; / complete as there was an error
  ];
- srvq,:enlist(z;s;mc);
  srvexec[`execute;z;s;mc];
  :0b; / here we do want to remain 'busy' until server has completed
  }
@@ -177,8 +192,7 @@ ch.sh.input_reply:{[z;s;mc]srvsi mc .`content`value;}  / pass back front end rep
 
 / comms, all comms are owned and managed by execution server, just pass through to the server
 / frontend->server
-ch.sh[`comm_info_request`comm_open`comm_msg`comm_close]:
- {[t;z;s;mc]srvq,:enlist(z;s;mc);srvexec[t;z;s;mc]}@'`comm_info`comm_open`comm_msg`comm_close
+ch.sh[`comm_info_request`comm_open`comm_msg`comm_close]:{[t;z;s;mc]srvexec[t;z;s;mc]}@'`comm_info`comm_open`comm_msg`comm_close
 / server->frontend
 sndcomm.gen:{[t;f;z;p;c;m;b]snd[z;io]update metadata:m from kr[t;p]{y!x y}[c]f;}
 sndcomm.open:sndcomm.gen[`comm_open]`comm_id`target_name`data
@@ -191,7 +205,7 @@ ch.sh[`]:{[z;s;mc].j.DEBU:mc;-2"Unrecognized message type ",mc[`header][`msg_typ
 
 / a result from the server
 srvres:{[z;s;mc;res]
- sndstd mc;                    / pending stdout/err msgs sent first
+ sndstd[];                     / pending stdout/err msgs sent first
  if[mc . `content`silent;:()]; / return early if silent
  err:res 0;exn::res 2;res@:1;  / results, res has (error;result;srvexeccount)
  / send actual content reply through io channel
@@ -213,7 +227,7 @@ srvinput:{[z;s;mc;prompt;pass]
  snd[z;si]kr[`input_request;mc]`prompt`password!(prompt;pass);}
 
 srvcmp.execute:{[z;s;mc;res]   / server has completed execute_request
- sndstd mc;                    / pending stdout/err msgs sent first
+ sndstd[];                     / pending stdout/err msgs sent first
  / return early if silent
  if[mc . `content`silent;:idle mc];
  err:res 0;exn::res 2;res@:1;  / results, res has (error;result;srvexeccount)
@@ -235,7 +249,7 @@ srvcmp.inspect:{[z;s;mc;res]   / server has completed inspect_request
  sndstat[`idle]mc}
 
 cmploadsave:{[t;z;s;mc;res]    / server completed load or save command
- sndstd mc;
+ sndstd[];
  if[mc .`content`silent;:idle mc];
  err:res 0;exn::res 2;res@:1;  / results, res has (error;result;srvexeccount)
  reply:`status`execution_count!(`ok`error err;exn);
@@ -246,7 +260,7 @@ cmploadsave:{[t;z;s;mc;res]    / server completed load or save command
  }
 srvcmp.loadscript:cmploadsave"loadscript"              / loaded a script through /%loadscript, won't process just display the new cell to user
 srvcmp.savescript:cmploadsave"savescript"              / saved a script through /%savescript, won't process just display result of save
-srvcmp.comm_info:{[z;s;mc;res]sndstd mc;snd[z;s]kr[`comm_info_reply;mc]res;idle mc}
+srvcmp.comm_info:{[z;s;mc;res]sndstd[];snd[z;s]kr[`comm_info_reply;mc]res;idle mc}
 srvcmp.commdef:{[z;s;mc;res]idle mc}                   / default completion action for comm messages
 
 / check all required modules can be imported, we shouldn't start the execution server if there are any missing dependencies
@@ -275,6 +289,7 @@ debmsg"check passwords"
   2=u;"kernel must use -U if server does";             / either server or kernel using -U but the other isn't
   1=u;"server must use -U if kernel does";
   ""~login;"Missing JUPYTERQ_LOGIN";                   / not provided login details in environment variable
+  not":"in login;"JUPYTERQ_LOGIN should be user:pass"; / bad login details
   not all{any plmd5[x]in read0 y}[login]'[kpf,spf];
    "Wrong user:password in JUPYTERQ_LOGIN";            / provided login details aren't valid for both the kernel and server
   "" /else everything ok
