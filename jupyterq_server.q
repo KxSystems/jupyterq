@@ -59,7 +59,7 @@ fwd:{[f;z;s;mc]
  $[-1~remote:@[value;rdef;-1];e" definition";
    not type[remote]in -6 -7h;e", must be a handle";
    not remote>2;e", must be a handle to a remote process";
-   @[neg[remote]@(rexec;f;z;s;mc);{x": ",y,", is the remote a valid handle?"}e]]}
+   @[neg[remote]@;(rexec;f;z;s;mc);{x": ",y,", is the remote a valid handle?"}e]]}
 snderr:{[f;z;s;mc;e]                                   / send an error message to frontend and complete the request
  krn(`.qpk.srvdis;z;s;mc;(1;e;exn));krncmp[f;z;s;mc;(1;e;exn)]}
 
