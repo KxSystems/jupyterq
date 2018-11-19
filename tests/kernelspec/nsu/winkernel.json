@@ -4,7 +4,7 @@
   "q",
   "jupyterq_kernel.q",
   "-U",
-  "tests\user.txt",
+  "tests\\user.txt",
   "-cds",
   "{connection_file}"
  ],

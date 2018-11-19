@@ -7,6 +7,7 @@ def geterr(f,e,l):
     global nerr
     if plsys == 'Windows':
         arg = "tests\kernelspec"+f+" > NUL 2>&1"
+        os.system("cp tests\kernelspec"+f+"\winkernel.json tests\kernelspec"+f+"\kernel.json")
     else:
         arg = "tests/kernelspec"+f+" > /dev/null 2>&1"
     os.system("jupyter kernelspec install --user --name=qpk " + arg)

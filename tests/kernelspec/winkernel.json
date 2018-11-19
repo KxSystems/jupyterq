@@ -4,11 +4,11 @@
   "q",
   "jupyterq_kernel.q",
   "-U",
-  "tests\user.txt",
+  "tests\\user.txt",
   "-cds",
   "{connection_file}"
  ],
  "display_name": "Q (kdb+)",
  "language": "q",
- "env": {"JUPYTERQ_SERVERARGS":"-U tests\user.txt","MPLBACKEND":"Agg"}
+ "env": {"JUPYTERQ_SERVERARGS":"-U tests\\user.txt","MPLBACKEND":"Agg"}
 }
