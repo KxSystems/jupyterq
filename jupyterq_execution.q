@@ -118,7 +118,7 @@ magic.savescript:{[z;s;c;mc;p]
  :(1;mc);
  }
 / treat code cell as containing python code, prepend p) to everything not indented
-magic.python:{[z;s;c;mc;p]mc[`content;`code]:` sv l[;{0N!"p)",$["/%"~2#x;"#",;]x}]c _ p;(0;mc)}
+magic.python:{[z;s;c;mc;p]mc[`content;`code]:` sv l[;{"p)",$["/%"~2#x;"#",;]x}]c _ p;(0;mc)}
  
 magics:enlist["/%loadscript*"]!enlist magic.loadscript
 magics[enlist"/%savescript*"]:enlist magic.savescript
