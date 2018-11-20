@@ -82,7 +82,7 @@ srvcmd:{"q jupyterq_server.q",$[.z.f like"*_";"_";""]," -q ",x," ",SERVERARGS}
 if[.z.o like"w*";
  npcreate:`:./jupyterq 2:`npcreate,1;
  startsrv:{ / x is string port
-  stdfd[`stdout`stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?0Ng}each`out`err;
+  stdfd[`stdout`stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?.z.p}each`out`err;
   system"start /B cmd /C ",srvcmd[x]," ^>",oe[0]," 2^>",oe 1};
  .z.ts:{stdcb each stdfd;};system"t 50";]; / TODO can we select on named pipe
 if[not .z.o like"w*";startsrv:{system srvcmd x}];
