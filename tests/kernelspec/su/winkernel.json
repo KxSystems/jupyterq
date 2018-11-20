@@ -1,0 +1,12 @@
+{
+ "argv": [
+  "cmd","/C",
+  "q",
+  "jupyterq_kernel.q",
+  "-cds",
+  "{connection_file}"
+ ],
+ "display_name": "Q (kdb+)",
+ "language": "q",
+ "env": {"JUPYTERQ_SERVERARGS":"-u tests\\user.txt","MPLBACKEND":"Agg"}
+}
