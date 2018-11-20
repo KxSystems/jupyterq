@@ -29,6 +29,7 @@ test:
   source_files:
     - tests/
     - examples/
+    - kernelspec/
     - kdb+Notebooks.ipynb
 
 about:
