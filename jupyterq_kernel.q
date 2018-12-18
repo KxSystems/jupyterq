@@ -50,7 +50,7 @@ rstd:{r:0#0x0;while[not 0~b:@[rfd;x;0];r,:b];r}        / read all available from
 regstd:{stdfd[stdn x]:fd:.z.w;rcb[fd;0b];acb fd}       / register fd as a stdout/err redirection
 IOHC:8+IODC:count IOD:0x06,"x"$"QPKIO"                 / delimitter written to stdio/err by server and counts
 iopending:`stdout`stderr!2#enlist 0#0x0                / pending bytes from stream in case partially read delimitter/parent mc
-iomc:`stdout`stderr!([]header:2#enlist dd)             / current parent message content to for stream
+iomc:``stdout`stderr!dd,([]header:2#enlist dd)         / current parent message content to for stream
 sndio:{iopending[x]:0#0x0;                             / clear pending buffer and send io to frontent
  snd[();io]kr[`stream;iomc x]`name`text!(x;"c"$y)}
 procio:{
