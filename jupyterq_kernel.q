@@ -84,8 +84,10 @@ if[.z.o like"w*";
  startsrv:{ / x is string port
   stdfd[`stdout`stderr]:npcreate each`$oe:{"\\\\.\\pipe\\jupyterq_",""sv string x,1?.z.p}each`out`err;
   system"start /B cmd /C ",srvcmd[x]," ^>",oe[0]," 2^>",oe 1};
- .z.ts:{stdcb each stdfd;};system"t 50";]; / TODO can we select on named pipe
-if[not .z.o like"w*";startsrv:{system srvcmd x}];
+ .z.ts:{stdcb each stdfd;zcb each key fd2s;};system"t 50";]; / TODO can we select on named pipe
+if[not .z.o like"w*";
+ startsrv:{system srvcmd x};
+ .z.ts:{zcb each key fd2s};system"t 50";];           / workaround until python threads can call q;
 debmsg"loading embedPy";
 \l p.k
 debmsg"loading pyzmq";
