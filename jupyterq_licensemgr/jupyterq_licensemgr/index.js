@@ -21,7 +21,7 @@ $.fn.bindFirst = function(name, fn) {
 
 	var IFRAME = null
 	var DIALOG = null;
-	var NEEDLICENSE = false;
+        var LICSTATUS = 'unknown'; // unknown, licensed, unlicensed
 
 	var BASE = location.protocol + "//" + location.host;
 	function close() {
@@ -34,7 +34,7 @@ window.J=J;
 	var actions = {
 		"license": function(text) {
 			if(IFRAME != null) return;
-			NEEDLICENSE=true;
+			LICSTATUS='unlicensed';
 
 			close();
 
@@ -50,11 +50,11 @@ window.J=J;
 		},
 
 		"ready": function() {
-			if(NEEDLICENSE) {
-				J.notebook.session.restart()
-				NEEDLICENSE = false;
+			if(LICSTATUS === 'unlicensed') {
+				J.notebook.session.restart();
 				close();
 			}
+			LICSTATUS = 'licensed';
 		}
 	}
 
@@ -78,22 +78,18 @@ window.J=J;
 
 	function suppress(evt,info) {
 		if(J.notebook.kernel_selector.current_selection == 'qpk') {
-			info.attempt=69;
-
 			then_check_kdb();
-			evt.stopImmediatePropagation();
-			evt.preventDefault();
+			if(LICSTATUS !== 'licensed') {
+				info.attempt = 42;
+				evt.stopImmediatePropagation();
+				evt.preventDefault();
+			}
 		}
 
 		return true;
 	}
 
 	window.addEventListener("message", function(x) {
-		if(IFRAME != null){
-			console.log(x.source);
-			console.log(IFRAME.get(0).contentWindow);
-		}
-
 		if(IFRAME != null && x.source == IFRAME.get(0).contentWindow) {
 			if(typeof x.data == 'string') x= JSON.parse(x.data); else x=x.data;
 			var h = new Image();
