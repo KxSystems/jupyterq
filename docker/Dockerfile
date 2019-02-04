@@ -5,21 +5,15 @@ ARG embedpy_img=kxsys/embedpy:latest
 ####
 
 FROM $embedpy_img AS embedpy
-
-# do not clean here, its cleaned later!
-# no upgrade either as it comes from embedPy
-RUN apt-get update
-
-####
-
 FROM embedpy AS juypterq
 
-RUN apt-get -yy --option=Dpkg::options::=--force-unsafe-io --no-install-recommends install \
-		build-essential \
+RUN apt-get update \
+	&& apt-get -yy --option=Dpkg::options::=--force-unsafe-io --no-install-recommends install build-essential \
 	&& apt-get clean \
 	&& find /var/lib/apt/lists -type f -delete
 
 COPY build/makefile requirements.txt *.q *.p *.ipynb /opt/kx/jupyterq/
+COPY jupyterq_licensemgr/ /opt/kx/jupyterq/jupyterq_licensemgr/
 COPY src/c/ /opt/kx/jupyterq/src/c/
 COPY kxpy/ /opt/kx/jupyterq/kxpy/
 COPY kernelspec/ /opt/kx/jupyterq/kernelspec/
@@ -50,16 +44,16 @@ LABEL	org.label-schema.schema-version="1.0" \
 	org.label-schema.build-date="$BUILD_DATE" \
 	org.label-schema.docker.cmd="docker run -v `pwd`/q:/tmp/q -p $PORT:$PORT kxsys/jupyterq"
 
-RUN apt-get -yy --option=Dpkg::options::=--force-unsafe-io --no-install-recommends install \
-		libgl1-mesa-glx \
-	&& apt-get clean \
-	&& find /var/lib/apt/lists -type f -delete
-
 COPY --from=juypterq /opt/kx/jupyterq /opt/kx/jupyterq
 RUN chown kx:kx /opt/kx/jupyterq /opt/kx/jupyterq/kdb+Notebooks.ipynb
 RUN find /opt/kx/jupyterq -maxdepth 1 -type f -name 'jupyterq_*.q' | xargs ln -s -t /opt/kx/q \
 	&& ln -s -t /opt/kx/q /opt/kx/jupyterq/kxpy \
 	&& ln -s -t /opt/kx/q/l64 /opt/kx/jupyterq/l64/jupyterq.so
+
+RUN apt-get update \
+	&& apt-get -yy --option=Dpkg::options::=--force-unsafe-io --no-install-recommends install xinetd libgl1-mesa-glx \
+	&& apt-get clean \
+	&& find /var/lib/apt/lists -type f -delete
 
 USER kx
 
@@ -67,15 +61,34 @@ RUN . /opt/conda/etc/profile.d/conda.sh \
 	&& conda activate kx \
 	&& conda install nomkl \
 	&& conda install --file /opt/kx/jupyterq/requirements.txt \
-	&& conda clean -y --all \
-	&& jupyter kernelspec install --user --name=qpk /opt/kx/jupyterq/kernelspec \
-	&& jupyter trust /opt/kx/jupyterq/kdb+Notebooks.ipynb
-
-# remove token auth
-RUN mkdir ~/.jupyter \
-	&& echo "c.NotebookApp.token = u''" > ~/.jupyter/jupyter_notebook_config.py
+	&& conda clean -y --all
 
 USER root
 
+RUN chown -R kx:kx /opt/kx/jupyterq/jupyterq_licensemgr
+
+USER kx
+
+RUN . /opt/conda/etc/profile.d/conda.sh \
+	&& conda activate kx \
+	&& cd /opt/kx/jupyterq/jupyterq_licensemgr \
+	&& python setup.py build \
+	&& pip install --user --no-deps .
+
+# remove token auth
+RUN mkdir -p ~/.jupyter \
+	&& echo "c.NotebookApp.token = u''" > ~/.jupyter/jupyter_notebook_config.py
+
+RUN . /opt/conda/etc/profile.d/conda.sh \
+	&& conda activate kx \
+	&& jupyter kernelspec install --user --name=qpk /opt/kx/jupyterq/kernelspec \
+	&& jupyter nbextension install --user --py jupyterq_licensemgr \
+	&& jupyter nbextension enable --user --py jupyterq_licensemgr \
+	&& jupyter serverextension enable --py jupyterq_licensemgr \
+	&& jupyter trust /opt/kx/jupyterq/kdb+Notebooks.ipynb
+
+USER root
+COPY docker/init /init
+RUN chmod 0755 /init
+
 ENTRYPOINT ["/init"]
-CMD ["/bin/sh", "-l", "-c", "printf '\npoint your browser at http://127.0.0.1:%s/notebooks/kdb%%2BNotebooks.ipynb\n\n' $PORT && exec jupyter notebook --notebook-dir=/opt/kx/jupyterq --ip='0.0.0.0' --port=$PORT --no-browser"]

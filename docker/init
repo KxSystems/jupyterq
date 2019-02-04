@@ -1,0 +1,10 @@
+#!/bin/sh
+set -x
+/usr/sbin/xinetd -d &
+
+HOME=/home/kx
+export HOME
+
+printf '\npoint your browser at http://localhost:%s/notebooks/kdb%%2BNotebooks.ipynb\n\n' "$PORT"
+
+exec chpst -u kx /bin/sh -l -c "cd /opt/kx/jupyterq && QLIC=/home/kx exec jupyter notebook --notebook-dir=/opt/kx/jupyterq --ip='0.0.0.0' --port='$PORT' --no-browser"
