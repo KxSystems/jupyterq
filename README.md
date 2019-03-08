@@ -98,8 +98,23 @@ jupyter notebook kdb+Notebooks.ipynb
 
 If you have [Docker installed](https://www.docker.com/community-edition) you can alternatively run:
 
-    docker run -it -p 8888:8888 --name myjupyterq kxsys/jupyterq
 
+Linux/macOS
+
+    docker run -it \ 
+      --name myjupyterq \
+      -p 8888:8888 \
+      -v $pwd/examples:/jqnotebooks \
+      kxsys/jupyterq
+
+Windows
+
+	docker run -it ^
+      --name myjupyterq ^
+      -p 8888:8888 ^
+      -v %cd%\examples:/jqnotebooks ^
+      kxsys/jupyterq
+		
 Now point your browser at http://localhost:8888/notebooks/kdb%2BNotebooks.ipynb.
 
 For subsequent runs, you will not be prompted to redo the license setup when calling:

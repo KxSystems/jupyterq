@@ -91,4 +91,12 @@ USER root
 COPY docker/init /init
 RUN chmod 0755 /init
 
+
+## Create new Entry folders
+## Notebooks, Data & Scripts can all be mounted to these folders
+
+ARG nbroot=/jqnotebooks
+ENV NBROOT=${nbroot}
+VOLUME ${nbroot} /jqdata /jqscripts
+
 ENTRYPOINT ["/init"]

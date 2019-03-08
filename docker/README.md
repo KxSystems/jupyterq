@@ -16,9 +16,18 @@ To build the project locally you run:
 
 Once built, you should have a local `jupyterq` image, you can run the following to use it:
 
-    docker run -it -p 8888:8888 jupyterq
+On windows run either
 
+	docker run -it -p 8888:8888 -v %cd%:/jqnotebooks jupyterq
+	 
+	docker run -it -p 8888:8888 -v %cd%\examples:/jqnotebooks jupyterq
+		
+On Mac / Linux	run either 
 
+	docker run -it -p 8888:8888 -v $pwd:/jqnotebooks jupyterq
+		
+	docker run -it -p 8888:8888 -v $pwd/examples:/jqnotebooks jupyterq
+		
 **N.B.** if you wish to use an alternative source for [embedPy](https://github.com/KxSystems/embedPy) then you can append `--build-arg embedpy_img=embedpy` to your argument list.
 
 Other build arguments are supported and you should browse the `Dockerfile` to see what they are.
