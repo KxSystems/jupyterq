@@ -79,6 +79,9 @@ def load_jupyter_server_extension(nb):
 					file.write(b64decode(d[0].replace(' ','+')))
 			self.add_header("Content-Type", "image/gif")
 			nb.log.info("jupyterq_licensemgr submitted from client")
+			for x in nb.kernel_manager.list_kernels():
+				nb.log.info("jupyterq_licensemgr restarting " + x['id'])
+				nb.kernel_manager.restart_kernel(x['id'])
 			self.finish(b64decode("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"))
 
 	wa = nb.web_app
