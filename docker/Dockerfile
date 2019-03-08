@@ -18,6 +18,7 @@ COPY src/c/ /opt/kx/jupyterq/src/c/
 COPY kxpy/ /opt/kx/jupyterq/kxpy/
 COPY kernelspec/ /opt/kx/jupyterq/kernelspec/
 COPY examples/ /opt/kx/jupyterq/examples/
+# COPY kdb+Notebooks.ipynb /opt/kx/jupyterq/examples/kdb+Notebooks.ipynb
 
 RUN make -C /opt/kx/jupyterq jupyterq
 
@@ -90,5 +91,19 @@ RUN . /opt/conda/etc/profile.d/conda.sh \
 USER root
 COPY docker/init /init
 RUN chmod 0755 /init
+
+
+## Create new Entry folders
+## Notebooks, Data & Scripts can all be mounted to these folders
+
+ARG nbroot=/jqnotebooks
+ARG nbdata=/jqdata
+ARG nbscripts=/jqscripts
+
+ENV NBROOT=${nbroot}
+ENV NBDATA=${nbdata}
+ENV NBSCRIPTS=${nbscipts}
+
+VOLUME ${nbroot} ${nbdata} ${nbscripts}
 
 ENTRYPOINT ["/init"]

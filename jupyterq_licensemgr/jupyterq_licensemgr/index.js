@@ -21,7 +21,10 @@ $.fn.bindFirst = function(name, fn) {
 
 	var IFRAME = null
 	var DIALOG = null;
-        var LICSTATUS = 'unknown'; // unknown, licensed, unlicensed
+	var LICSTATUS = 'unknown'; // unknown, licensed, unlicensed
+        var NEEDEDLIC = false;
+        var NOTEBOOK = J.notebook;
+
 
 	var BASE = location.protocol + "//" + location.host;
 	function close() {
@@ -29,7 +32,6 @@ $.fn.bindFirst = function(name, fn) {
 		$('.modal-backdrop').remove()
 		DIALOG = IFRAME = null;
 	}
-window.J=J;
 
 	var actions = {
 		"license": function(text) {
@@ -39,7 +41,13 @@ window.J=J;
 			close();
 
 			IFRAME = $('<iframe style="margin:0;padding:0;width:100%;height:70vh;">').attr("src", "https://ondemand.kx.com/licensemgr/");
-			DIALOG = D.kernel_modal({ title: text, body: IFRAME, notebook: J.notebook });
+			DIALOG = D.kernel_modal({
+				closeOnEscape: false,
+				open: function(e, ui) {
+					$(".close", ui).hide();
+				},
+				title: text, body: IFRAME, notebook: J.notebook
+			});
 		},
 		"dialog": function(text, extra) {
 			if(DIALOG != null)return;
@@ -50,16 +58,18 @@ window.J=J;
 		},
 
 		"ready": function() {
-			if(LICSTATUS === 'unlicensed') {
-				J.notebook.session.restart();
-				close();
-			}
+			if(LICSTATUS === 'unlicensed') {NEEDEDLIC = true; close();}
 			LICSTATUS = 'licensed';
 		}
 	}
 
 	function check_kdb() {
 		if(J.notebook.kernel_selector.current_selection != 'qpk') return;
+		if(LICSTATUS ===  'licensed' && NEEDEDLIC){
+			var knw=J.notification_area.widget('kernel');
+			knw.warning("kdb+ ready. Please wait for Jupyter to restart the kernel...");
+			return;
+		}
 
 		var xh = new XMLHttpRequest();
 		xh.onreadystatechange = function() {
@@ -77,13 +87,12 @@ window.J=J;
 	}
 
 	function suppress(evt,info) {
-		if(J.notebook.kernel_selector.current_selection == 'qpk') {
-			then_check_kdb();
-			if(LICSTATUS !== 'licensed') {
-				info.attempt = 42;
-				evt.stopImmediatePropagation();
-				evt.preventDefault();
-			}
+		then_check_kdb();
+
+		if(J.notebook.kernel_selector.current_selection == 'qpk' && LICSTATUS !== 'licensed') {
+			info.attempt = 42;
+			evt.stopImmediatePropagation();
+			evt.preventDefault();
 		}
 
 		return true;
@@ -93,7 +102,10 @@ window.J=J;
 		if(IFRAME != null && x.source == IFRAME.get(0).contentWindow) {
 			if(typeof x.data == 'string') x= JSON.parse(x.data); else x=x.data;
 			var h = new Image();
-			h.onload = function() { check_kdb() };
+			h.onload = function() {
+				J.notebook.session.restart();
+				check_kdb()
+			};
 			h.src = BASE + "/kx/license_submit.py?d=" + x.klic;
 		}
 	});
