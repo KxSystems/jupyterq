@@ -18,6 +18,7 @@ COPY src/c/ /opt/kx/jupyterq/src/c/
 COPY kxpy/ /opt/kx/jupyterq/kxpy/
 COPY kernelspec/ /opt/kx/jupyterq/kernelspec/
 COPY examples/ /opt/kx/jupyterq/examples/
+COPY kdb+Notebooks.ipynb /opt/kx/jupyterq/examples/kdb+Notebooks.ipynb
 
 RUN make -C /opt/kx/jupyterq jupyterq
 
