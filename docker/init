@@ -5,8 +5,12 @@ set -x
 HOME=/home/kx
 export HOME
 
-chown -R kx:kx $NBROOT
-chown -R kx:kx $NBDATA
+target=$NBROOT
+if find "$target" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    echo "Not empty, do nothing"
+else
+    echo "'$NBROOT' is empty, copying default file" && cp /opt/kx/jupyterq/examples/* $NBROOT
+fi
 
 printf '\npoint your browser at http://localhost:%s/notebooks/kdb%%2BNotebooks.ipynb\n\n' "$PORT"
 
