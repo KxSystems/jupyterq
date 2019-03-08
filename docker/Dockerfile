@@ -45,7 +45,7 @@ LABEL	org.label-schema.schema-version="1.0" \
 	org.label-schema.docker.cmd="docker run -v `pwd`/q:/tmp/q -p $PORT:$PORT kxsys/jupyterq"
 
 COPY --from=juypterq /opt/kx/jupyterq /opt/kx/jupyterq
-RUN chown kx:kx /opt/kx/jupyterq /opt/kx/jupyterq/kdb+Notebooks.ipynb
+RUN chown kx:kx /opt/kx/jupyterq /opt/kx/jupyterq/examples/kdb+Notebooks.ipynb
 RUN find /opt/kx/jupyterq -maxdepth 1 -type f -name 'jupyterq_*.q' | xargs ln -s -t /opt/kx/q \
 	&& ln -s -t /opt/kx/q /opt/kx/jupyterq/kxpy \
 	&& ln -s -t /opt/kx/q/l64 /opt/kx/jupyterq/l64/jupyterq.so
@@ -85,7 +85,7 @@ RUN . /opt/conda/etc/profile.d/conda.sh \
 	&& jupyter nbextension install --user --py jupyterq_licensemgr \
 	&& jupyter nbextension enable --user --py jupyterq_licensemgr \
 	&& jupyter serverextension enable --py jupyterq_licensemgr \
-	&& jupyter trust /opt/kx/jupyterq/kdb+Notebooks.ipynb
+	&& jupyter trust /opt/kx/jupyterq/examples/kdb+Notebooks.ipynb
 
 USER root
 COPY docker/init /init
@@ -96,7 +96,13 @@ RUN chmod 0755 /init
 ## Notebooks, Data & Scripts can all be mounted to these folders
 
 ARG nbroot=/jqnotebooks
+ARG nbdata=/jqdata
+ARG nbscripts=/jqscripts
+
 ENV NBROOT=${nbroot}
-VOLUME ${nbroot} /jqdata /jqscripts
+ENV NBDATA=${nbdata}
+ENV NBSCRIPTS=${nbscipts}
+
+VOLUME ${nbroot} ${nbdata} ${nbscripts}
 
 ENTRYPOINT ["/init"]

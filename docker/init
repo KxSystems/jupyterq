@@ -5,6 +5,9 @@ set -x
 HOME=/home/kx
 export HOME
 
+chown -R kx:kx $NBROOT
+chown -R kx:kx $NBDATA
+
 printf '\npoint your browser at http://localhost:%s/notebooks/kdb%%2BNotebooks.ipynb\n\n' "$PORT"
 
 exec chpst -u kx /bin/sh -l -c "cd /opt/kx/jupyterq && QLIC=/home/kx exec jupyter notebook --notebook-dir='$NBROOT' --ip='0.0.0.0' --port='$PORT' --no-browser"
