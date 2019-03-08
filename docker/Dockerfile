@@ -18,7 +18,7 @@ COPY src/c/ /opt/kx/jupyterq/src/c/
 COPY kxpy/ /opt/kx/jupyterq/kxpy/
 COPY kernelspec/ /opt/kx/jupyterq/kernelspec/
 COPY examples/ /opt/kx/jupyterq/examples/
-COPY kdb+Notebooks.ipynb /opt/kx/jupyterq/examples/kdb+Notebooks.ipynb
+# COPY kdb+Notebooks.ipynb /opt/kx/jupyterq/examples/kdb+Notebooks.ipynb
 
 RUN make -C /opt/kx/jupyterq jupyterq
 
@@ -46,7 +46,7 @@ LABEL	org.label-schema.schema-version="1.0" \
 	org.label-schema.docker.cmd="docker run -v `pwd`/q:/tmp/q -p $PORT:$PORT kxsys/jupyterq"
 
 COPY --from=juypterq /opt/kx/jupyterq /opt/kx/jupyterq
-RUN chown kx:kx /opt/kx/jupyterq /opt/kx/jupyterq/examples/kdb+Notebooks.ipynb
+RUN chown kx:kx /opt/kx/jupyterq /opt/kx/jupyterq/kdb+Notebooks.ipynb
 RUN find /opt/kx/jupyterq -maxdepth 1 -type f -name 'jupyterq_*.q' | xargs ln -s -t /opt/kx/q \
 	&& ln -s -t /opt/kx/q /opt/kx/jupyterq/kxpy \
 	&& ln -s -t /opt/kx/q/l64 /opt/kx/jupyterq/l64/jupyterq.so
@@ -86,7 +86,7 @@ RUN . /opt/conda/etc/profile.d/conda.sh \
 	&& jupyter nbextension install --user --py jupyterq_licensemgr \
 	&& jupyter nbextension enable --user --py jupyterq_licensemgr \
 	&& jupyter serverextension enable --py jupyterq_licensemgr \
-	&& jupyter trust /opt/kx/jupyterq/examples/kdb+Notebooks.ipynb
+	&& jupyter trust /opt/kx/jupyterq/kdb+Notebooks.ipynb
 
 USER root
 COPY docker/init /init

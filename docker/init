@@ -9,7 +9,7 @@ target=$NBROOT
 if find "$target" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
     echo "Not empty, do nothing"
 else
-    echo "'$NBROOT' is empty, copying default file" && cp /opt/kx/jupyterq/examples/* $NBROOT
+    echo "'$NBROOT' is empty, copying default file" && cp -R /opt/kx/jupyterq/examples $NBROOT && cp /opt/kx/jupyterq/kdb+Notebooks.ipynb $NBROOT
 fi
 
 chmod -R a+w $NBROOT
