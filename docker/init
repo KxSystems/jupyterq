@@ -1,5 +1,4 @@
 #!/bin/sh
-set -x
 /usr/sbin/xinetd -d &
 
 HOME=/home/kx
