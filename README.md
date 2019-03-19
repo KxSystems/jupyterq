@@ -98,28 +98,15 @@ jupyter notebook kdb+Notebooks.ipynb
 
 If you have [Docker installed](https://www.docker.com/community-edition) you can alternatively run:
 
-
-Linux/macOS
-
-    docker run -it \ 
-      --name myjupyterq \
-      -p 8888:8888 \
-      -v $pwd/examples:/jqnotebooks \
-      kxsys/jupyterq
-
-Windows
-
-	docker run -it ^
-      --name myjupyterq ^
-      -p 8888:8888 ^
-      -v %cd%\examples:/jqnotebooks ^
-      kxsys/jupyterq
+    docker run -it --name myjupyterq -p 8888:8888 kxsys/jupyterq
 		
 Now point your browser at http://localhost:8888/notebooks/kdb%2BNotebooks.ipynb.
 
 For subsequent runs, you will not be prompted to redo the license setup when calling:
 
     docker start -ai myjupyterq
+
+To change the port or use the image to run your own notebooks, see the docker [README](docker/README.md#runoptions)
 
 **N.B.** [instructions regarding headless/presets are available](https://github.com/KxSystems/embedPy/blob/master/docker/README.md#headlesspresets)
 
