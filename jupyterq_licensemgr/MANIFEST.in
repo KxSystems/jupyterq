@@ -1,0 +1,1 @@
+recursive-include jupyterq_licensemgr *.json *.js *.q

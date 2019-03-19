@@ -72,7 +72,7 @@ sndsrv:{$[null srvh;pend;srvh]x}                       / queue or send command t
 srvexec:{[f;z;s;mc]sndsrv(`.qpk.execmsg;f;z;s;mc)}     / exec a request on the server
 pending:()                                             / pending commands for server as it starts up
 pend:{pending,:enlist x}                               / queue a command to the server
-srvreg:{srvh::0-hopen x;srvh each pending;pending::()} / server registration, exec all pending messages
+srvreg:{(srvh::neg hopen x)each pending;pending::()}   / server registration, exec all pending messages
 srvregsi:{srvsi::neg .z.w;}                            / server register standard input handle
 closeport:{system"p 0";srvh"\\p 0"}                    / close kernel and server port
 srvstarterr:{starterr` sv("server startup error";x;y)} / execution server startup error

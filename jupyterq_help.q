@@ -18,7 +18,7 @@ p)def< findkw(soup,kw):
     title=link.get_text()
  return kw,title,href
 bs:.p.import[`bs4;`:BeautifulSoup;>]
-refcard:@[.Q.hg;`:http://code.kx.com/q/ref/card/;{0}]; / .Q.hg doesn't support https?
+refcard:@[req:{"c"$.p.import[`urllib.request][`:urlopen][x][`:read][]`};"https://code.kx.com/q/ref/card/";{0}];
 offline:0~refcard; 
 if[not offline;findkw:findkw[bs[refcard;`html.parser];]];
 find:{$[offline&kw:(x:`$sstring x)in qkw;"Sorry no help is available, as the kernel did not have access to code.kx.com when it was started";kw;findkw x;0]}
