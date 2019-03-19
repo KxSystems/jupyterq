@@ -89,7 +89,7 @@ $.fn.bindFirst = function(name, fn) {
 	function suppress(evt,info) {
 		then_check_kdb();
 
-		if(J.notebook.kernel_selector.current_selection == 'qpk' && LICSTATUS !== 'licensed') {
+		if(DIALOG != null || (J.notebook.kernel_selector.current_selection == 'qpk' && LICSTATUS !== 'licensed')) {
 			info.attempt = 42;
 			evt.stopImmediatePropagation();
 			evt.preventDefault();
@@ -113,6 +113,9 @@ $.fn.bindFirst = function(name, fn) {
 	function bind() {
 		if(J.notebook.kernel == null) return setTimeout(bind,0);
 		J.notebook.kernel.events.bindFirst("kernel_dead.Kernel",           suppress);
+		J.notebook.kernel.events.bindFirst("kernel_dead.Session",          suppress);
+		J.notebook.kernel.events.bindFirst("kernel_connection_failed.Kernel",suppress);
+		J.notebook.kernel.events.bindFirst("kernel_killed.Kernel",         suppress);
 		J.notebook.kernel.events.bindFirst("kernel_autorestarting.Kernel", suppress);
 		J.notebook.kernel.events.bindFirst("notebook_loaded.Notebook",     then_check_kdb);
 		J.notebook.kernel.events.bindFirst("kernel_starting.Kernel",       then_check_kdb);
