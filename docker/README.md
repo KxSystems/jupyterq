@@ -16,12 +16,13 @@ To build the project locally you run:
 
 Once built, you should have a local `jupyterq` image, you can run the following to use it:
 
-    docker run -it -p 8888:8888 jupyterq
+    docker run --rm -it -p 8888:8888 jupyterq
 
 
 **N.B.** if you wish to use an alternative source for [embedPy](https://github.com/KxSystems/embedPy) then you can append `--build-arg embedpy_img=embedpy` to your argument list.
 
 Other build arguments are supported and you should browse the `Dockerfile` to see what they are.
+
 
 # Deploy
 
@@ -34,6 +35,27 @@ To do a deploy, you simply tag and push your releases as usual:
     git push
     git tag 0.7
     git push --tag
+
+
+## Run Options
+
+These options apply both to a locally build image if you have one or the `kxsys/jupyterq` image
+
+To change the port the container exposes the notebook server on:
+
+    docker run --rm -it -p 9000:9000 -e PORT=9000 kxsys/jupyterq
+
+You can use the image to run your own JupyterQ notebooks without building another docker image, the directory with your notebooks should be mounted in the container at /jqnotebooks.
+
+For example if your notebooks are on the host machine in a directory `examples`, then:
+
+On Windows
+
+    docker run -it -p 8888:8888 -v %cd%\examples:/jqnotebooks kxsys/jupyterq
+
+Or on Mac / Linux
+
+    docker run -it -p 8888:8888 -v $(pwd)/examples:/jqnotebooks kxsys/jupyterq
 
 
 ## Related Links

@@ -6,8 +6,12 @@ login:getenv`JUPYTERQ_LOGIN;                           / login details
 crhp:{$[""~y;x;`$"::",string[x],":",y]}                / create handle with optional username/password
 iod:{y 0x06,("x"$"QPKIO"),(0x0 vs count mcs),mcs:-8!x} / write indication of start of stdio/err during message handling
 setstate:{[f;z;s;mc]F::f;Z::z;S::s;iod[MC::mc]'[1 2]}  / set latest message state 
-krnh:neg hopen crhp["J"$.z.x 0;login];                 / handle to kernel
-krnsi:neg hopen crhp["J"$.z.x 0;login];                / handle to kernel for stdin requests
+khopen:{@[hopen;x;                                     / connect to kernel, exit if jupyter shut it down before we could connect
+ {y;-2"Can't connect to kernel :",string[x],
+ " jupyter may have shut it down before we could connect";
+ exit 1}x]}
+krnh:neg khopen crhp["J"$.z.x 0;login];                / handle to kernel
+krnsi:neg khopen crhp["J"$.z.x 0;login];               / handle to kernel for stdin requests
 krnsi(`.qpk.srvregsi;`)                                / register stdin handle on server
 krnh(`.qpk.srvreg;crhp["j"$system"p";login]);          / register
 krn:{krnh x;krnh[];}                                   / send and async flush

@@ -1,0 +1,1 @@
+serverextension for automatic licensing
