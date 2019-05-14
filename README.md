@@ -24,7 +24,7 @@ Jupyter kernel for kdb+. Features include
 
 You can either
 
--   install jupyterq to run on your local machine; or
+-   install JupyterQ to run on your local machine; or
 -   download or build a Docker image in which to run JupyterQ
 
 There are two ways to install JupyterQ on your local machine:
@@ -77,11 +77,11 @@ There are two ways to install JupyterQ on your local machine:
 
 3. Ensure you can run q _before_ running JupyterQ for the first time. You may need to obtain an on-demand licence
 
-```bash
-q
-…
-q)\\
-```
+  ```bash
+  q
+  …
+  q)\\
+  ```
 
 ## Running after install
 
@@ -116,9 +116,9 @@ docker start -ai myjupyterq
 
 To change the port or use the image to run your own notebooks, see the Docker [README](docker/README.md#runoptions).
 
-**N.B.** [instructions regarding headless/presets are available](https://github.com/KxSystems/embedPy/blob/master/docker/README.md#headlesspresets)
+See [instructions regarding headless/presets](https://github.com/KxSystems/embedPy/blob/master/docker/README.md#headlesspresets).
 
-**N.B.** [build instructions for the image are available](docker/README.md)
+See [build instructions for the image](docker/README.md).
 
 
 ## Using notebooks
@@ -128,4 +128,4 @@ See the notebook `kdb+Notebooks.ipynb` for full interactive examples and explana
 
 ## Documentation
 
-Documentation is available on the [JupyterQ](https://code.kx.com/v2/ml/jupyterq/) homepage.
+See documentation on the [JupyterQ](https://code.kx.com/v2/ml/jupyterq/) homepage.
