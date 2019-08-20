@@ -35,6 +35,7 @@ There are two ways to install JupyterQ on your local machine:
 
 ## Install on local machine
 
+<a id='download-and-install-a-release'></a>
 ### Download and install a release
 
 1.  Make sure you have installed [embedPy](https://github.com/KxSystems/embedPy)
@@ -82,7 +83,21 @@ There are two ways to install JupyterQ on your local machine:
   …
   q)\\
   ```
+---
+**_NOTE_**
 
+If installing on a system which already has kdb+ we recommended installing JupyterQ, embedPy and the conda packaged version of kdb+ in a conda environment, this can be done using the following steps
+
+```
+// create a new environment and install jupyterq and its dependancies
+> conda create -n jupyterqenv -c kx jupyterq
+// move into the new environment where jupyterq can be run
+> conda activate jupyterqenv
+```
+
+It should be noted that in this case JupyterQ, embedPy and the conda installed kdb can only be run from this activated environment.
+
+---   
 ## Running after install
 
 To run the Jupyter console
