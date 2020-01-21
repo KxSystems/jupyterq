@@ -1,6 +1,6 @@
 # JupyterQ
 
-
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/kxsystems/jupyterq)](https://github.com/kxsystems/jupyterq/releases) [![Travis (.org) branch](https://img.shields.io/travis/kxsystems/jupyterq/master?label=travis%20build)](https://travis-ci.org/kxsystems/jupyterq/branches) [![AppVeyor branch](https://img.shields.io/appveyor/ci/jhanna-kx/jupyterq-opbu8/master?label=appveyor%20build)](https://ci.appveyor.com/project/jhanna-kx/jupyterq-opbu8/branch/master)
 
 Jupyter kernel for kdb+. Features include
 
