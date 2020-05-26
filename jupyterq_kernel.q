@@ -97,7 +97,7 @@ debmsg"loading pyzmq";
 cleanz:{{rcb[zsock.fd x;0b];zsock.destroy x}'[socks]}  / clean up sockets, we're about to exit
 / setup sockets and add callbacks through sd1
 debmsg"zeromq socket setup";
-{[t;x]x set last socks,:zsock[t][`$cds.transport,"://",cds.ip,":",cports x]}''[`new_router`new_pub;(`sh`si`cn`hb;`io)];
+{[t;x]x set last socks,:zsock[t][`$transp,"://",cds.ip,$["tcp"~transp:cds.transport;":";"-"],cports x]}''[`new_router`new_pub;(`sh`si`cn`hb;`io)];
 {[x]fd2s[fd:zsock.fd x]:x:value sx:x;s2n[x]:sx;acb fd}'[`sh`si`cn`hb];
 
 / kernel responses and send functions
