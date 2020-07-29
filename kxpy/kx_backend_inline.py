@@ -65,10 +65,12 @@ def initialise(qpubfunc,qcommfunc,qclearfunc,qipythonfunc):
   IPython.get_ipython=get_ipython
   from ipywidgets.widgets import widget
   from matplotlib.backends import backend_nbagg
+  from ipykernel import comm
   #monkey patch the Comm class for ipywidget
   widget.Comm=KxComm 
   widget.clear_output=clear_output
   backend_nbagg.Comm=KxComm
+  comm.Comm=KxComm 
  except:
   print("ipywidgets not imported, ipywidgets will not be functional")
   traceback.print_exc()
@@ -184,6 +186,7 @@ def flush_figures():
         # clear flags for next round
         show._to_draw = []
         show._draw_called = False
+
 
 
 # Changes to matplotlib in version 1.2 requires a mpl backend to supply a default

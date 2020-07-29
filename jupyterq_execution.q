@@ -20,7 +20,7 @@ md:{(1#x)!1#y}                                         / make one item dict
 mime:{$[`..mime~first x;                               / dict of mime type to data
   {$[x~(::);()!();k!mc'[k:key x;value x]]}each 1_x;    
   (md[`$"text/plain"]enlist .Q.s x;()!())]}
-mc:{[mt;d]$[(mt like"image/*")&not mt like"*svg+xml";  / mime content, just encodes non svg images for now
+mc:{[mt;d]$[(.[{.b64.decq x;0b};enlist -1_d;1b])&(mt like"image/*")&not mt like"*svg+xml";  / mime content, just encodes non svg images for now
   .b64.enc"x"$d;d]}
 
 / code evaluation
