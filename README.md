@@ -16,9 +16,12 @@ Jupyter kernel for kdb+. Features include
 ## Requirements
 
 - kdb+ ≥ v3.5 64-bit
-- Python ≥ 3.5
+- Python ≥ 3.6
 - [embedPy](https://github.com/KxSystems/embedPy)
 
+**Note:**
+
+As of September 5, 2020. Python 3.5 has reached end of life as indicated [here](https://www.python.org/downloads/release/python-3510/). As such official support for this Python Version has been removed in favour of updates to support Python 3.8.
 
 ## Overview
 
