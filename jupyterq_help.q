@@ -27,7 +27,9 @@ p)def< findkw(soup,kw):
     title=link.get_text()
  return okw,title,href
 bs:.p.import[`bs4;`:BeautifulSoup;>]
-refcard:@[req:{"c"$.p.import[`urllib.request][`:urlopen][x][`:read][]`};(hb:"https://code.kx.com/v2/"),"ref";{0}];
+timeout:$[`timeout in key argDict:.Q.opt .z.x;"J"$first argDict`timeout;5]
+if[timeout<0;-1"Invalid timeout input, reverting to default value of 5";timeout:5]
+refcard:@[req:{"c"$.p.import[`urllib.request][`:urlopen][x;`timeout pykw y][`:read][]`}[;timeout];(hb:"https://code.kx.com/v2/"),"ref";{0}];
 offline:0~refcard; 
 if[not offline;findkw:findkw[bs[refcard;`html.parser];]];
 find:{$[offline&kw:(x:`$sstring x)in qkw;"Sorry no help is available, as the kernel did not have access to code.kx.com when it was started";kw;findkw x;0]}
