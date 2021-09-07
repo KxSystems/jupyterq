@@ -55,7 +55,7 @@ def load_jupyter_server_extension(nb):
 			elif status == "host":
 				result['action'] = "license"
 				result['info'] = "Wrong hostname on license"
-			elif status == "kc.lic" or status == "k4.lic" or status == 'detected and no license found.': # no license, or corrupt license
+			elif status == "kc.lic" or status == "k4.lic" or status == 'detected and no license found.' or status == 'licence error: kc.lic' or status == 'licence error: k4.lic': # no license, or corrupt license
 				result['action'] = "license"
 				result['info'] = "Unlicensed workstation"
 			elif status == "ok":
