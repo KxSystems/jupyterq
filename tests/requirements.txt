@@ -1,3 +1,4 @@
 pytest
 jupyter_kernel_test
 jupyter_client>=5.2.3
+nbconvert

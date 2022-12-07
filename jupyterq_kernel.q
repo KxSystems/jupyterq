@@ -106,7 +106,7 @@ kri:{[k;v]@[krd;k;:;v]}                                / override defaults with 
 kr:{[mtyp;p;c]                                         / kernel response from msgtype, parent msg, content dict
  kri[`header`pheader`content;(krh mtyp;p`header;c)]}
 krh:{`version`date`session`username`msg_type`msg_id!   / new kernel response header for messages from msg_type
- (`5.1;ts[];sid;.z.u;x;rand 0Ng)}
+ (`5.2;ts[];sid;.z.u;x;rand 0Ng)}
 sndstat:{snd[();io]kr[`status;y]md[`execution_state]x} / send status x with parent message y
 snd:{[z;s;mcr]                                         / send a message to a socket with content mcr
  zmsg.addC[msg:zmsg.new`]'[sm[z]logdeb mcr];zmsg.send[msg]s}
@@ -160,7 +160,7 @@ h.si:h.cn:h.sh / control and stdin we treat like shell as there's one thread for
 
 / channel/msg_type specific request handlers
 ch.sh.kernel_info_request:{[z;s;mc]
- reply:select protocol_version:`5.1,implementation:`qpk,implementation_version:.qpk.version,
+ reply:select status:`ok,protocol_version:`5.2,implementation:`qpk,implementation_version:.qpk.version,
   banner:("KDB+ v",string[.z.K]," ",string[.z.k]," kdb+ kernel for jupyter, jupyterQ v",string .qpk.version),help_links:enlist`text`url!("kdb+ help";"http://code.kx.com"),
   language_info:(select name:`q,version:(string[.z.K],".0"),mimetype:"text/x-q",file_extension:`.q from .qpk.dd) from dd;
  :snd[z;s]kr[`kernel_info_reply;mc;reply];
