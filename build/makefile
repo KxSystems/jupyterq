@@ -10,6 +10,8 @@ else ifeq ($(shell uname),Darwin)
 QLIBDIR=m64
 LDFLAGS=-bundle -undefined dynamic_lookup -L/usr/local/lib -Xlinker -rpath -Xlinker /usr/local/lib
 INCLUDES+=-I/usr/local/include
+CC=clang
+CFLAGS += -arch arm64 -arch x86_64
 endif
 ifeq (x$QHOME,x)
 $(error QHOME not defined)

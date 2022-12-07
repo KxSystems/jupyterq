@@ -12,8 +12,8 @@ build:
 
 requirements:
   build:
-    - m2w64-make                     [win]
-    - {{ compiler('c') }}
+    - m2w64-make                    # [win]
+    - {{ compiler('c') }}           # [not osx]
   host:
     - python
     - kdb
