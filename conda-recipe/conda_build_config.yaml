@@ -1,3 +1,6 @@
+target_platform: # [osx]
+ - osx-64        # [osx]
+ - osx-arm64     # [osx]
 python:
   - 3.8
   - 3.9

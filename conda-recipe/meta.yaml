@@ -9,11 +9,15 @@ build:
   detect_binary_files_with_prefix: False
   script_env:
     QLIC
+  overlinking_ignore_patterns:
+   - "q/*/jupyterq.so"
+
 
 requirements:
   build:
     - m2w64-make                    # [win]
     - {{ compiler('c') }}           # [not osx]
+    - python
   host:
     - python
     - kdb

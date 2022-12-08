@@ -24,7 +24,7 @@ QLIC_K4 = path.join(QLIC, 'k4.lic')
 for el, ln in [('QLIC_K4', 'k4.lic'), ('QLIC_KC', 'kc.lic')]:
 	lic = getenv(el)
 	if lic:
-		with open(path.join(qlic, ln), 'wb') as file:
+		with open(path.join(QLIC, ln), 'wb') as file:
 			file.write(b64decode(lic))
 
 def _jupyter_server_extension_paths():

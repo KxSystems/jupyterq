@@ -47,9 +47,9 @@ LABEL	org.label-schema.schema-version="1.0" \
 
 COPY --from=juypterq /opt/kx/jupyterq /opt/kx/jupyterq
 RUN chown kx:kx /opt/kx/jupyterq /opt/kx/jupyterq/kdb+Notebooks.ipynb
-RUN find /opt/kx/jupyterq -maxdepth 1 -type f -name 'jupyterq_*.q' | xargs ln -s -t /opt/kx/q \
-	&& ln -s -t /opt/kx/q /opt/kx/jupyterq/kxpy \
-	&& ln -s -t /opt/kx/q/l64 /opt/kx/jupyterq/l64/jupyterq.so
+#RUN find /opt/kx/jupyterq -maxdepth 1 -type f -name 'jupyterq_*.q' | xargs ln -s -t /opt/kx/q \
+#	&& ln -s -t /opt/kx/q /opt/kx/jupyterq/kxpy \
+#	&& ln -s -t /opt/kx/q/l64 /opt/kx/jupyterq/l64/jupyterq.so
 
 RUN apt-get update \
 	&& apt-get -yy --option=Dpkg::options::=--force-unsafe-io --no-install-recommends install xinetd libgl1-mesa-glx \
@@ -62,6 +62,9 @@ RUN . /opt/conda/etc/profile.d/conda.sh \
 	&& conda activate kx \
 	&& conda install nomkl \
 	&& conda install --file /opt/kx/jupyterq/requirements.txt \
+	&& find /opt/kx/jupyterq -maxdepth 1 -type f -name 'jupyterq_*.q' | xargs ln -s -t $QHOME \
+	&& ln -s -t $QHOME /opt/kx/jupyterq/kxpy \
+	&& ln -s -t $QHOME/l64 /opt/kx/jupyterq/l64/jupyterq.so \
 	&& conda clean -y --all
 
 USER root

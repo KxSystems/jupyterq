@@ -2,12 +2,12 @@ ifeq ($(platform),l64)
  CNDPLAT := linux-64
  CNDURL  := https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
  RMRPATH := patchelf --remove-rpath
- RELPATH := linux
+ RELPLAT := linux
 else
  CNDPLAT := osx-64
  CNDURL  := https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
  RMRPATH := install_name_tool -delete_rpath @loader_path/../../lib
- RELPATH := osx
+ RELPLAT := osx
 endif
 P ?= $(HOME)/.gitlab-runner
 CNDENV := jupyterq_bld_$(platform)
@@ -35,7 +35,7 @@ $(platform)/conda: conda
 	ci/conda.sh $(P) $(CNDENV) $(CNDCHN)
 l64/docker:
 	docker build -t kxsys/jupyterq:latest -f docker/Dockerfile .
-	docker tag kxsys/jupysterq:latest kxsys/jupyterq:$(CI_COMMIT_TAG)
+	docker tag kxsys/jupyterq:latest kxsys/jupyterq:$(CI_COMMIT_TAG)
 	#echo $(DOCKER_PASSWORD)|docker login --username $(DOCKER_USERNAME) --password-stdin && docker push kxsys/jupyterq:latest && docker push kxsys/jupyterq:$(CI_COMMIT_TAG)
 $(platform)/github:
-	tar czf jupyterq_$(platform)-$(CI_COMMIT_TAG).tgz p.q p.k test.q tests $(platform)/p.so LICENSE README.md
+	tar czf jupyterq_$(RELPLAT)-$(CI_COMMIT_TAG).tgz jupyterq*.q install.sh requirements.txt README.md LICENSE kxpy kernelspec examples kdb+Notebooks.ipynb [ml]64/jupyterq.so
