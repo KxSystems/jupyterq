@@ -11,7 +11,7 @@ else
 endif
 P ?= $(HOME)/.gitlab-runner
 CNDENV := jupyterq_bld_$(platform)
-CNDCHN ?= kx
+CNDCHN ?= kx/label/dev -c jhanna-kx/label/dev
 #prereqs
 conda: $(P)/miniconda/
 $(P)/miniconda/:
