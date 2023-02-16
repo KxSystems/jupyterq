@@ -17,7 +17,7 @@ The simplest case is running some code and getting a result. Note here:
 
 System commands can be used with the `\` escape character at the start of a line in a code cell.
 
-> :warning: **Warning** 
+> **Warning** 
 > 
 > Namespace setting using `\d` operates on a per cell basis so cannot be set for an entire notebook
 > 
@@ -100,7 +100,7 @@ Will save contents of the cell as a script, optionally overwriting the script if
 
 ## Python and inline display
 
-:warning: **Experimental**
+> :warning: **Experimental**
 
 Along with q code, Python code can be run in a q process using [embedPy](https://github.com/kxsystems/embedpy), lines preceded by `p)` will be executed as Python code.
 Charts created using matplotlib will be displayed inline in the notebook.
