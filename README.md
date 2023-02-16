@@ -146,4 +146,6 @@ See the notebook `kdb+Notebooks.ipynb` for full interactive examples and explana
 
 ## Documentation
 
-See documentation on the [JupyterQ](https://code.kx.com/v2/ml/jupyterq/) homepage.
+s-   [User guide](docs/userguide.md)
+-   [FAQ](docs/faq.md)
+
