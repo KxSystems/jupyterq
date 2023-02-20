@@ -17,7 +17,7 @@ p)def< findkw(soup,kw):
   tag=soup.find('a',text=kw)
  if tag==None:
    return tag
- href=tag.get('href',default='https://code.kx.com/v2/ref/')
+ href=tag.get('href',default='https://code.kx.com/q/ref/')
  title= tag.parent.fetchNextSiblings('p')[0].text if namespace else tag.get('title',default=kw)
  #title might be peer to the tag
  if title==kw:
@@ -29,7 +29,7 @@ p)def< findkw(soup,kw):
 bs:.p.import[`bs4;`:BeautifulSoup;>]
 timeout:$[`timeout in key argDict:.Q.opt .z.x;"J"$first argDict`timeout;5]
 if[timeout<0;-1"Invalid timeout input, reverting to default value of 5";timeout:5]
-refcard:@[req:{"c"$.p.import[`urllib.request][`:urlopen][x;`timeout pykw y][`:read][]`}[;timeout];(hb:"https://code.kx.com/v2/"),"ref";{0}];
+refcard:@[req:{"c"$.p.import[`urllib.request][`:urlopen][x;`timeout pykw y][`:read][]`}[;timeout];(hb:"https://code.kx.com/q/"),"ref";{0}];
 offline:0~refcard; 
 if[not offline;findkw:findkw[bs[refcard;`html.parser];]];
 find:{$[offline&kw:(x:`$sstring x)in qkw;"Sorry no help is available, as the kernel did not have access to code.kx.com when it was started";kw;findkw x;0]}
