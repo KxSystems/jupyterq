@@ -282,7 +282,7 @@ p)def< checkimport(name):
   print("\nYou may need to set LD_LIBRARY_PATH/DYLD_LIBRARY_PATH to your python distribution's library directory: {0}".format(sysconfig.get_config_var('LIBDIR')))
 debmsg"check imports";
 checkimport:{if[(::)~@[x;y;{}];exit 1]}checkimport      / exit on an import failure, frontend will notice and message should be printed
-checkimport each`matplotlib`bs4`kxpy.kx_backend_inline;
+checkimport each`numpy`matplotlib`bs4`kxpy.kx_backend_inline;
 debmsg"check passwords"                                         
 {$[count x;starterr;]x}
  $[any"-u"in/:(.z.X;" "vs SERVERARGS);                 / trying to use -u for server or kernel, only -U supported
