@@ -3,7 +3,7 @@ set -e
 . "$P/miniconda/etc/profile.d/conda.sh"
 conda create -n $CNDENV && conda activate $CNDENV
 conda install -c kx/label/dev kdb
-conda install -c jhanna-kx/label/dev embedpy
+conda install -c kx/label/dev embedpy
 cp $platform/jupyterq.so .
 export QLIC=$P
 pip install -qqq -r requirements.txt

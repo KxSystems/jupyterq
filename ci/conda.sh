@@ -10,7 +10,10 @@ export JUPYTERQ_REQS=$(paste -sd "|" requirements.txt)
 conda build conda-recipe --output -c $CNDCHN > packagenames.txt
 conda build -c $CNDCHN conda-recipe --no-long-test-prefix --no-include-recipe
 set +x
-CONDATOKEN=$(gpg -d --batch $P/condauploadtoken.gpg)
+if [ "x" = "x$CONDATOKEN" ]
+then
+ CONDATOKEN=$(cat /tmp/condauploadtoken)
+fi
 for pack in $(cat packagenames.txt)
 do
  anaconda -t $CONDATOKEN upload -l dev $pack
