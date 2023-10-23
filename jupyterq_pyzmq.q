@@ -12,9 +12,11 @@ zsock.new:{ctx[`:socket]pyzmqmap x}                                             
 zsock.new_router:{(s:zsock.new`new_router)[`:bind]x;addzsock s}
 zsock.new_pub:{(s:zsock.new`new_pub)[`:bind]x;addzsock s}
 zsocks:(0#0)!()                                                                                 / id->socket
-addzsock:{zsocks[k:1+max -1,key zsocks]:x;k}                                                    / keep track of zmq sockets
-zsock.destroy:{zsocks[x][`:close][]}                                                            / close a socket
-zsock.fd:$[17<="I"${(x?".")#x}pyzmq[`:pyzmq_version][]`;                                        / file descriptor for zeromq socke, need v>=17 for fileno
+addzsock:{show x;zsocks[k:1+max -1,key zsocks]:x;k}                                                    / keep track of zmq sockets
+zsock.destroy:{zsocks[x][`:close][]}                  
+                                         / close a socket
+pyzmq_version:pyzmq[`:pyzmq_version][]`;
+zsock.fd:$[17<="I"${(x?".")#x}$[-11h=type pyzmq_version;string;]pyzmq_version;                                        / file descriptor for zeromq socke, need v>=17 for fileno
  {"i"$zsocks[x][`:fileno][]`};
  {"i"$zsocks[x][`:FD]`}]
 zmsgs:(0#0)!()                                                                                  / pending messages sent or received
@@ -27,12 +29,15 @@ zmsg.send:{zsocks[y][`:send_multipart][zmsgs x;`flags pykw NOBLOCK]}            
 
 /trap EAGAIN error on non-blocking read in python so no error message is displayed
 p)import zmq
-p)def* zmqcall(func,*args,**kwargs):
+p)def zmqcall(func,*args,**kwargs):
+ print(*args)
  try:
-  return func(*args,**kwargs)
+  return func(flags = zmq.NOBLOCK, *args,**kwargs)
  except zmq.error.Again as e:
   return 0
+zmqcall:.p.get[`zmqcall]
 zmsg.recvnowait:{                                                                               / non blocking read from zmq socket, returns identity if nothing available
- msg:zmqcall[zsocks[x][`:recv_multipart];`flags pykw NOBLOCK];if[0~msg`;:(::)];
+ show .pykx.util.isw zsocks[x][`:recv_multipart];
+ msg:zmqcall[zsocks[x][`:recv_multipart]];if[0~msg`;:(::)];
  zmsgs[m:zmsg.new[]]:msg;m}
 

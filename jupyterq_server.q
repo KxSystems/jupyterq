@@ -35,7 +35,7 @@ krn(`.qpk.closeport;`)
 / send request to frontend for python getpass.getpass and input functions
 / TODO readline()
 p)import io
-p)class> stdreader(io.TextIOBase):
+p)class stdreader(io.TextIOBase):
  def __init__(self,qfunc=None):
   import getpass
   self.qfunc=qfunc
@@ -45,6 +45,7 @@ p)class> stdreader(io.TextIOBase):
   return self.qfunc(prompt if prompt else "",False)
  def getpass(self,prompt=None): #TODO optional streams parameter, (should error)
   return self.qfunc(prompt if prompt else "",True)
+stdreader:.p.get[`stdreader;>]
  
 readstdin:{krnsi(`.qpk.srvinput;Z;S;MC;x;y);$[1~first r:neg[krnsi][];'r 1;r]}
 {.p.import[`sys][:;x;stdreader y]}'[`:stdin;readstdin];

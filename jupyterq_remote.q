@@ -1,4 +1,7 @@
 / to be loaded into any kdb+ process 
+show "1";
+
+
 \d .qpk
 if[@[{value x;0};"p)1";{1}];'"embedPy is required"];
 \l jupyterq_execution.q

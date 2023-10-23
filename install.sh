@@ -20,7 +20,7 @@ then
 fi
 src=$(dirname $0)
 set -x
-jupyter kernelspec install --user --name=qpk ${src}/kernelspec
+python -m jupyter kernelspec install --user --name=qpk ${src}/kernelspec
 shopt -s extglob
 cp ${src}/jupyterq*.q?(_) $QHOME
 cp -r ${src}/kxpy $QHOME

@@ -1,5 +1,6 @@
 / jupyter kernel, no code or data lives here, communicates with a server proces but handles jupyter zeromq messaging
 \p 0W   / need for server process to connect
+show "2";
 \d .qpk
 / implementation version, set in builds, defaults to `development
 version:@[{JUPYTERQVERSION};0;`development];
@@ -89,7 +90,9 @@ if[not .z.o like"w*";
  startsrv:{system srvcmd x};
  .z.ts:{zcb each key fd2s};system"t 50";];           / workaround until python threads can call q;
 debmsg"loading embedPy";
-\l p.k
+.pykx.enabled:0b
+@[{system"l ",x;.pykx.enabled:1b};"pykx.q";{debmsg"Failed to load pykx, attempting to load embedpy:",x;system"l p.q"}];
+if[.pykx.enabled;.p:.pykx];
 debmsg"loading pyzmq";
 \l jupyterq_pyzmq.q                                    / zero mq messaging
 
@@ -266,7 +269,7 @@ srvcmp.comm_info:{[z;s;mc;res]sndstd[];snd[z;s]kr[`comm_info_reply;mc]res;idle m
 srvcmp.commdef:{[z;s;mc;res]idle mc}                   / default completion action for comm messages
 
 / check all required modules can be imported, we shouldn't start the execution server if there are any missing dependencies
-p)def< checkimport(name):
+p)def checkimport(name):
  import importlib,sys,traceback
  try:
   importlib.import_module(name)
@@ -280,6 +283,7 @@ p)def< checkimport(name):
   import sysconfig
   # can be a conflict between system zlib, libssl and probably others which q may already have loaded by the time p.q is loaded
   print("\nYou may need to set LD_LIBRARY_PATH/DYLD_LIBRARY_PATH to your python distribution's library directory: {0}".format(sysconfig.get_config_var('LIBDIR')))
+checkimport:.p.get[`checkimport;<]
 debmsg"check imports";
 checkimport:{if[(::)~@[x;y;{}];exit 1]}checkimport      / exit on an import failure, frontend will notice and message should be printed
 checkimport each`matplotlib`bs4`kxpy.kx_backend_inline;

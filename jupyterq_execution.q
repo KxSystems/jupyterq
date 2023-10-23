@@ -1,7 +1,17 @@
 / execution server, code, data lives in this process
 / TODO, closed std handle?
 \d .qpk
-\l p.q
+
+show "1";
+
+.pykx.enabled:0b;
+@[{system"l ",x;.pykx.enabled:1b};
+  "pykx.q";
+  {show "PyKX failed to initialise with error", x;system"l p.q"}
+  ]
+
+if[.pykx.enabled;.p:.pykx];
+
 \l jupyterq_b64.q
 \l jupyterq_help.q
 setdef:{x set @[value;x;{x}y]}                         / set x to default value y if not already set
