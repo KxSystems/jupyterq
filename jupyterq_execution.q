@@ -20,7 +20,7 @@ md:{(1#x)!1#y}                                         / make one item dict
 mime:{$[`..mime~first x;                               / dict of mime type to data
   {$[x~(::);()!();k!mc'[k:key x;value x]]}each 1_x;    
   (md[`$"text/plain"]enlist .Q.s x;()!())]}
-mc:{[mt;d]$[(.[{.b64.decq x;0b};enlist -1_d;1b])&(mt like"image/*")&not mt like"*svg+xml";  / mime content, just encodes non svg images for now
+mc:{[mt;d]$[(@[{.b64.decq x;0b};d;1b])&(mt like"image/*")&not mt like"*svg+xml";  / mime content, just encodes non svg images for now, try not to reencode already encoded data
   .b64.enc"x"$d;d]}
 
 / code evaluation
@@ -183,6 +183,8 @@ itoken:{help$[11=type x;sv[`];]x}
 
 / interface with python for inline display of plots, widgets etc 
 setqbackend:{[x;y;z;w]                                 / matplotlib and ipywidgets inline display
+ np:.p.import[`numpy];
+ np[`:finfo;np[`:float64]];
  backend:.p.import[`kxpy.kx_backend_inline];
  backend[`:initialise;x;y;z;w];
  excallbacks,:enlist(backend`:flush_figures;::);       / flush all undisplayed figures at the end of cell execution, same as ipython

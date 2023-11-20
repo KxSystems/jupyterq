@@ -1,0 +1,109 @@
+#TODO test for w64/w32
+#TODO test for m64arm
+stages:
+- build
+- test
+- deploy
+- github
+
+variables:
+  GIT_DEPTH: 10
+workflow:
+  rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /^release .*/'
+      when: never
+    - when: always
+
+# manual job to kick everything off unless commit message begins rc (deploy job below is *always* manual)
+trigger-builds:
+  stage: build
+  script: echo trigger build
+  tags:
+   - l64
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: manual
+
+build:
+  stage: build
+  tags:
+    - $platform
+  script:
+    - VER=$CI_COMMIT_TAG;[ "x$VER" = "x" ] && VER=$CI_COMMIT_BRANCH-$CI_COMMIT_SHA; export VER
+    - perl -p -i -e 's/JUPYTERQVERSION/`\$\"'${VER}'\"/g' jupyterq_kernel.q
+    - make -f build/makefile jupyterq
+  artifacts:
+    expire_in: 2 days
+    paths:
+      - jupyterq*.q
+      - "[ml]64/jupyterq.so"
+  parallel:
+    matrix:
+      - platform: [l64,m64] # TODO win
+  needs:
+    - trigger-builds
+
+test-artifacts:
+  stage: build
+  tags:
+    - l64
+  script: echo package-tests
+  artifacts:
+    expire_in: 2 days
+    paths:
+      - tests/
+      - install.sh
+      - requirements.txt
+      - kxpy
+      - kernelspec
+      - kdb+Notebooks.ipynb
+      - ci/makefile
+  needs:
+    - trigger-builds
+
+test:
+  stage: test
+  tags:
+    - $platform
+  variables:
+   GIT_STRATEGY: none
+  script: make -f ci/makefile test
+  dependencies:
+    - build
+    - test-artifacts
+  parallel:
+    matrix:
+      - platform: [l64,m64] # TODO m64arm
+deploy:
+  stage: deploy
+  tags:
+    - $platform
+  dependencies:
+    - build
+    - test
+  script: make -f ci/makefile $platform/$target
+  artifacts:
+    expire_in: 2 days
+    paths:
+      - jupyterq_*-$CI_COMMIT_TAG.tgz
+  rules:
+    - if: '$CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""'
+      when: never
+    - when: manual
+  parallel:
+    matrix:
+     - platform: l64
+       target: [docker,github,conda]
+     - platform: m64
+       target: [github,conda]
+ghrelease:
+  stage: github
+  tags:
+   - l64
+  script: make -f ci/makefile l64/ghrelease
+  dependencies:
+   - deploy
+  rules:
+    - if: '$CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""'
+      when: never
+    - when: manual

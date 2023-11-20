@@ -1,7 +1,12 @@
 #!/bin/bash
-if [ -e ${QLIC}/kc.lic ] || [ -e ${QLIC}/k4.lic ]
+if [[ $SUBDIR == $build_platform ]]
 then
-  tests/test.sh
+  if [ -e ${QLIC}/kc.lic ] || [ -e ${QLIC}/k4.lic ]
+  then
+    tests/test.sh
+  else
+    echo No kdb+, no tests;
+  fi
 else
-  echo No kdb+, no tests;
+ echo cross compile, no tests
 fi
