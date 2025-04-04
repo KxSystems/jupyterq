@@ -1,6 +1,14 @@
 / jupyter kernel, no code or data lives here, communicates with a server proces but handles jupyter zeromq messaging
 \p 0W   / need for server process to connect
 \d .qpk
+@[{system"l ",x;.pykx.loaded:1b};
+  "pykx.q";
+  {@[{system"l ",x;.pykx.loaded:0b};
+     "p.q";
+     {'"Failed to load PyKX or embedPy with error: ",x}
+     ]}];
+if[.pykx.loaded;.p:.pykx];
+if[not all `topy`toraw in key `.p;.p.toraw:.p.topy:(::);.p.i.isw:.pykx.util.isw]
 / implementation version, set in builds, defaults to `development
 version:@[{JUPYTERQVERSION};0;`development];
 / common variables
@@ -147,6 +155,7 @@ zcb:{
 / channel handlers
 h.hb:{[s;m;n]zmsg.send[m;s]} / heartbeats just echo
 h.sh:{[s;m;n]
+ show "handler sh";
  / read messages and check signatures
  if[not c[di+1]~hmac raze 4#(2+di:c?dlm)_c:zmsg.popC each zmsg.size[m]#m;-2"Invalid message, ignoring";:()];
  / message dicts as dict passed to the request handler
@@ -160,6 +169,7 @@ h.si:h.cn:h.sh / control and stdin we treat like shell as there's one thread for
 
 / channel/msg_type specific request handlers
 ch.sh.kernel_info_request:{[z;s;mc]
+ show "info request executing";
  reply:select status:`ok,protocol_version:`5.2,implementation:`qpk,implementation_version:.qpk.version,
   banner:("KDB+ v",string[.z.K]," ",string[.z.k]," kdb+ kernel for jupyter, jupyterQ v",string .qpk.version),help_links:enlist`text`url!("kdb+ help";"http://code.kx.com"),
   language_info:(select name:`q,version:(string[.z.K],".0"),mimetype:"text/x-q",file_extension:`.q from .qpk.dd) from dd;
@@ -167,6 +177,7 @@ ch.sh.kernel_info_request:{[z;s;mc]
  }
 
 ch.sh.is_complete_request:{[z;s;mc]
+ show "complete request executing";
  es:(epr:ep mc .`content`code)[;0];
  / hanging {[ and continued select/update/delete allowed but not }"] and only on last line of input
  i:string["[{"],enlist"from";
@@ -175,6 +186,7 @@ ch.sh.is_complete_request:{[z;s;mc]
 
 / check parsing, then pass to server and return false if no parse error to wait for server response
 ch.sh.execute_request:{[z;s;mc]
+ show "executing";
  es:(epr:ep(mcc:mc`content)`code)[;0]; / first check parsing
  if[any epr[;0];                       / couldn't parse, send back error reply and content
   reply:update traceback:(ename;evalue)from
@@ -225,10 +237,12 @@ srvdis:{[z;s;mc;res]
  }
 srvclear:{[z;s;mc;res]snd[z;io]kr[`clear_output;mc]md[`wait]res}
 srvinput:{[z;s;mc;prompt;pass]
+ show "exec srvinput";
  if[not mc . `content`allow_stdin;neg[.z.w](1;"Input requests not supported by this frontend");:()];
  snd[z;si]kr[`input_request;mc]`prompt`password!(prompt;pass);}
 
 srvcmp.execute:{[z;s;mc;res]   / server has completed execute_request
+ show "exec srvexecute";
  sndstd[];                     / pending stdout/err msgs sent first
  / return early if silent
  if[mc . `content`silent;:idle mc];
@@ -266,7 +280,7 @@ srvcmp.comm_info:{[z;s;mc;res]sndstd[];snd[z;s]kr[`comm_info_reply;mc]res;idle m
 srvcmp.commdef:{[z;s;mc;res]idle mc}                   / default completion action for comm messages
 
 / check all required modules can be imported, we shouldn't start the execution server if there are any missing dependencies
-p)def< checkimport(name):
+p)def checkimport(name):
  import importlib,sys,traceback
  try:
   importlib.import_module(name)
@@ -281,7 +295,7 @@ p)def< checkimport(name):
   # can be a conflict between system zlib, libssl and probably others which q may already have loaded by the time p.q is loaded
   print("\nYou may need to set LD_LIBRARY_PATH/DYLD_LIBRARY_PATH to your python distribution's library directory: {0}".format(sysconfig.get_config_var('LIBDIR')))
 debmsg"check imports";
-checkimport:{if[(::)~@[x;y;{}];exit 1]}checkimport      / exit on an import failure, frontend will notice and message should be printed
+checkimport:{if[(::)~@[x;y;{}];exit 1]}.p.get[`checkimport;<]    / exit on an import failure, frontend will notice and message should be printed
 checkimport each`numpy`matplotlib`bs4`kxpy.kx_backend_inline;
 debmsg"check passwords"                                         
 {$[count x;starterr;]x}

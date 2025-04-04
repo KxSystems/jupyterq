@@ -4,7 +4,7 @@
 / with the text/html one (which can be displayed in a pager by notebooks)
 \l jupyterq_htmlgen.q
 / find the link and title for a name as string or symbol
-p)def< findkw(soup,kw):
+p)def findkw(soup,kw):
  okw=kw
  if not isinstance(kw,str): return None
  kw = kw[3:] if '.q.' == kw[:3] else '' if kw == '.q' else kw
@@ -26,6 +26,7 @@ p)def< findkw(soup,kw):
    if link.get_text()!=kw:
     title=link.get_text()
  return okw,title,href
+findkw:.p.get[`findkw;<]
 bs:.p.import[`bs4;`:BeautifulSoup;>]
 timeout:$[`timeout in key argDict:.Q.opt .z.x;"J"$first argDict`timeout;5]
 if[timeout<0;-1"Invalid timeout input, reverting to default value of 5";timeout:5]

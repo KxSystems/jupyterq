@@ -1,6 +1,14 @@
 / to be loaded into any kdb+ process 
 \d .qpk
-if[@[{value x;0};"p)1";{1}];'"embedPy is required"];
+@[{system"l ",x;.pykx.loaded:1b};
+  "pykx.q";
+  {@[{system"l ",x;.pykx.loaded:0b};
+     "p.q";
+     {'"Failed to load PyKX or embedPy with error: ",x}
+     ]}]
+if[.pykx.loaded;.p:.pykx];
+if[not all `topy`toraw in key `.p;.p.toraw:.p.topy:(::);.p.i.isw:.pykx.util.isw]
+
 \l jupyterq_execution.q
 setstate:{[f;z;s;mc]F::f;Z::z;S::s;MC::mc;krnh::neg .z.w}     / set latest message state
 krn:{krnh(`.qpk.krn;x);krnh[];}                               / send and async flush

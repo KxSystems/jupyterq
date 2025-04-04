@@ -1,7 +1,16 @@
 / execution server, code, data lives in this process
 / TODO, closed std handle?
 \d .qpk
-\l p.q
+
+@[{system"l ",x;.pykx.loaded:1b};
+  "pykx.q";
+  {@[{system"l ",x;.pykx.loaded:0b};
+     "p.q";
+     {'"Failed to load PyKX or embedPy with error: ",x}
+    ]}]
+if[.pykx.loaded;.p:.pykx];
+if[not all `topy`toraw in key `.p;.p.toraw:.p.topy:(::);.p.i.isw:.pykx.util.isw]
+
 \l jupyterq_b64.q
 \l jupyterq_help.q
 setdef:{x set @[value;x;{x}y]}                         / set x to default value y if not already set
@@ -10,7 +19,7 @@ setdef[`exn;0];                                        / execution count
 fexists:{x~key x:hsym`$sstring x}                      / file exists, (used for /%loadscript and /%savescript)
 df:{x k?[;y]k:key x}                                   / helper, return entry at ` for a dict of funcs if y not present 
 
-jloads:{@[x;y;{y;x}y]}.p.import[`json;`:loads][>]      / get python object from json
+jloads:{@[x;y;{y;x}y]}.p.import[`json;`:loads]         / get python object from json
 jconv:{jloads .j.j x}                                  / convert q to json then load as python object
 
 comms:(`u#enlist"")!enlist`targ`data`py!3#()           / currently open comms, comm_id!info
@@ -193,7 +202,7 @@ mpcb:{krnsnd[`.qpk.srvdis](0;(`..mime;x 0;x 1));}      / callback for backend di
 clearoutput:{krn(`.qpk.srvclear;Z;S;MC;x);}            / clear output of current cell on notebook
 pyident:.p.pyeval"lambda *x,**y:None"                  / function which does nothing and can be called with any args in python
 / python object with access to members with obj['name']
-p)class> qipython():
+p)class qipython():
  def __init__(self):
   pass
  def __getitem__(self,item):
